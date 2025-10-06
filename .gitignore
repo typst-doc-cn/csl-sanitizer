@@ -1,3 +1,6 @@
+# For test runs
+/tmp/
+
 # Python-generated files
 __pycache__/
 *.py[oc]
