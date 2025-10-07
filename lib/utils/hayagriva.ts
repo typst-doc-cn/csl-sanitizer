@@ -9,6 +9,10 @@ import { execFileSync } from "node:child_process";
 type Message = string;
 type OneOrMany<T> = T[] | T;
 
+function asArray<T>(x: OneOrMany<T>): T[] {
+  return Array.isArray(x) ? x : [x];
+}
+
 function normalize_csl(cslFilePath: string, savePath: string): Message[] {
   const csl = parse(fs.readFileSync(cslFilePath, { encoding: "utf-8" }));
 
@@ -16,6 +20,7 @@ function normalize_csl(cslFilePath: string, savePath: string): Message[] {
     ...remove_duplicate_layouts(csl),
     ...remove_citation_range_delimiter_terms(csl),
     ...replace_space_et_al_terms(csl),
+    ...remove_institution_in_names(csl),
   ];
 
   fs.writeFileSync(savePath, stringify(csl), { encoding: "utf-8" });
@@ -73,7 +78,7 @@ function* remove_citation_range_delimiter_terms(
     return;
   }
 
-  for (const locale of Array.isArray(locales) ? locales : [locales]) {
+  for (const locale of asArray(locales)) {
     if (locale?.terms) {
       if (locale.terms.term === undefined) {
         // Theoretically, this block should never be reached.
@@ -132,7 +137,7 @@ function* replace_space_et_al_terms(
   }
 
   // Replace `<term name="space-et-al">`
-  for (const locale of Array.isArray(locales) ? locales : [locales]) {
+  for (const locale of asArray(locales)) {
     if (locale?.terms) {
       if (locale.terms.term === undefined) {
         // Theoretically, this block should never be reached.
@@ -142,10 +147,7 @@ function* replace_space_et_al_terms(
         continue;
       }
 
-      const terms = Array.isArray(locale.terms.term)
-        ? locale.terms.term
-        : [locale.terms.term];
-      for (const term of terms) {
+      for (const term of asArray(locale.terms.term)) {
         if (term["@name"] === "space-et-al") {
           term["@name"] = "et-al";
           yield "Replaced the term name `space-et-al` with `et-al`.";
@@ -155,11 +157,33 @@ function* replace_space_et_al_terms(
   }
 
   // Replace `<et-al term="space-et-al"/>`
-  const macros = (csl.style as any).macro as Record<string, any>[];
-  for (const macro of macros) {
+  const macros = (csl.style as any).macro as OneOrMany<Record<string, any>>;
+  for (const macro of asArray(macros)) {
     if (macro.names?.["et-al"]?.["@term"] === "space-et-al") {
       macro.names["et-al"]["@term"] = "et-al";
       yield "Replaced the term `space-et-al` referenced by `<et-al>` with `et-al`.";
+    }
+  }
+}
+
+/**
+ * Remove `<institution>` in `<names>`.
+ *
+ * This is specified in the CSL-M extension.
+ * https://citeproc-js.readthedocs.io/en/latest/csl-m/index.html#cs-institution-and-friends-extension
+ */
+function* remove_institution_in_names(
+  csl: xml_document
+): Generator<Message, void, void> {
+  const macros = (csl.style as any).macro as OneOrMany<{
+    names?: Record<string, any>;
+    "@name": string;
+  }>;
+  for (const macro of asArray(macros)) {
+    if (macro.names && "institution" in macro.names) {
+      // `<institution>` is usually empty.
+      delete macro.names.institution;
+      yield `Removed the institution in names of a macro (${macro["@name"]}). [Discard CSL-M extension]`;
     }
   }
 }
@@ -203,7 +227,8 @@ for (const csl of [
   "src/中国政法大学/中国政法大学.csl",
   "src/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）.csl",
   "src/food-materials-research/food-materials-research.csl",
-  // "src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
+  "src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
+  // "src/导出刊名/导出刊名.csl",
 ]) {
   try {
     test_hayagriva(csl);
