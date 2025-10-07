@@ -32,17 +32,15 @@ function* remove_duplicate_layouts(
   csl: xml_document
 ): Generator<Message, void, void> {
   const bib_layouts = (csl.style as any).bibliography.layout as any[];
-  if (bib_layouts.length > 1) {
-    assert(bib_layouts.length === 2);
-    assert(["en", "zh"].includes(bib_layouts[0]["@locale"]));
+  while (bib_layouts.length > 1) {
+    assert(["en", "zh", "ja", "de", "fr"].includes(bib_layouts[0]["@locale"]));
     bib_layouts.shift();
     yield "Removed the localized layout for bibliography. (Discard CSL-M extension)";
   }
 
   const cite_layouts = (csl.style as any).citation.layout as any[];
-  if (cite_layouts.length > 1) {
-    assert(cite_layouts.length === 2);
-    assert(["en", "zh"].includes(cite_layouts[0]["@locale"]));
+  while (cite_layouts.length > 1) {
+    assert(["en", "zh", "ja", "de", "fr"].includes(cite_layouts[0]["@locale"]));
     cite_layouts.shift();
     yield "Removed the localized layout for citation. (Discard CSL-M extension)";
   }
@@ -121,6 +119,7 @@ export function test_hayagriva(cslFilePath: string): Message[] {
 
 for (const csl of [
   "src/历史研究/历史研究.csl",
+  // "src/中国政法大学/中国政法大学.csl",
   "src/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）.csl",
   // "src/food-materials-research/food-materials-research.csl",
   // "src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
