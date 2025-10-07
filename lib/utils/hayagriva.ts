@@ -42,15 +42,18 @@ function* remove_duplicate_layouts(
     yield "Removed the localized layout for bibliography. (Discard CSL-M extension)";
   }
 
-  const cite_layouts = (csl.style as any).citation.layout as any[];
-  while (cite_layouts.length > 1) {
-    assert(
-      ["en", "zh", "ja", "de", "fr", "zh ja"].includes(
-        cite_layouts[0]["@locale"]
-      )
-    );
-    cite_layouts.shift();
-    yield "Removed the localized layout for citation. (Discard CSL-M extension)";
+  const cite_layouts = (csl.style as any).citation.layout as any[] | null;
+  // Some styles are bibliography-only.
+  if (cite_layouts) {
+    while (cite_layouts.length > 1) {
+      assert(
+        ["en", "zh", "ja", "de", "fr", "zh ja"].includes(
+          cite_layouts[0]["@locale"]
+        )
+      );
+      cite_layouts.shift();
+      yield "Removed the localized layout for citation. (Discard CSL-M extension)";
+    }
   }
 }
 
@@ -62,9 +65,16 @@ function* remove_duplicate_layouts(
 function* replace_space_et_al_terms(
   csl: xml_document
 ): Generator<Message, void, void> {
-  const locales = (csl.style as any).locale as OneOrMany<{
-    terms: { term: OneOrMany<{ "@name": string }> };
-  }>;
+  const locales = (csl.style as any).locale as
+    | OneOrMany<{
+        terms: { term: OneOrMany<{ "@name": string }> };
+      }>
+    | undefined;
+
+  if (!locales) {
+    // Skip if no `<locale>` is defined.
+    return;
+  }
 
   // Replace `<term name="space-et-al">`
   for (const locale of Array.isArray(locales) ? locales : [locales]) {
