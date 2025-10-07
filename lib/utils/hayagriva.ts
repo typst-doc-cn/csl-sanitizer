@@ -64,8 +64,9 @@ function* remove_citation_range_delimiter_terms(
   const locales = (csl.style as any).locale as
     | OneOrMany<{
         terms: { term: OneOrMany<{ "@name": string; "#text": string }> };
-      }>
+      } | null>
     | undefined;
+  // `null` means empty `<locale>`.
 
   if (!locales) {
     // Skip if no `<locale>` is defined.
@@ -73,7 +74,7 @@ function* remove_citation_range_delimiter_terms(
   }
 
   for (const locale of Array.isArray(locales) ? locales : [locales]) {
-    if (locale.terms) {
+    if (locale?.terms) {
       if (locale.terms.term === undefined) {
         // Theoretically, this block should never be reached.
         // However, `src/国际政治研究/国际政治研究.csl` puts `<date>` in `<terms>`, hitting the condition.
@@ -101,6 +102,7 @@ function* remove_citation_range_delimiter_terms(
           delete locale.terms.term;
           // @ts-expect-error
           delete locale.terms;
+          // For simplicity, keep the `<locale>` even if it might become empty now.
 
           yield `Removed the term citation-range-delimiter (${delim}) and its wrapping tag. [Discard citeproc-js extension]`;
         }
@@ -120,8 +122,9 @@ function* replace_space_et_al_terms(
   const locales = (csl.style as any).locale as
     | OneOrMany<{
         terms: { term: OneOrMany<{ "@name": string }> };
-      }>
+      } | null>
     | undefined;
+  // `null` means empty `<locale>`.
 
   if (!locales) {
     // Skip if no `<locale>` is defined.
@@ -130,7 +133,7 @@ function* replace_space_et_al_terms(
 
   // Replace `<term name="space-et-al">`
   for (const locale of Array.isArray(locales) ? locales : [locales]) {
-    if (locale.terms) {
+    if (locale?.terms) {
       if (locale.terms.term === undefined) {
         // Theoretically, this block should never be reached.
         // However, `src/国际政治研究/国际政治研究.csl` puts `<date>` in `<terms>`, hitting the condition.
