@@ -33,14 +33,22 @@ function* remove_duplicate_layouts(
 ): Generator<Message, void, void> {
   const bib_layouts = (csl.style as any).bibliography.layout as any[];
   while (bib_layouts.length > 1) {
-    assert(["en", "zh", "ja", "de", "fr"].includes(bib_layouts[0]["@locale"]));
+    assert(
+      ["en", "zh", "ja", "de", "fr", "zh ja"].includes(
+        bib_layouts[0]["@locale"]
+      )
+    );
     bib_layouts.shift();
     yield "Removed the localized layout for bibliography. (Discard CSL-M extension)";
   }
 
   const cite_layouts = (csl.style as any).citation.layout as any[];
   while (cite_layouts.length > 1) {
-    assert(["en", "zh", "ja", "de", "fr"].includes(cite_layouts[0]["@locale"]));
+    assert(
+      ["en", "zh", "ja", "de", "fr", "zh ja"].includes(
+        cite_layouts[0]["@locale"]
+      )
+    );
     cite_layouts.shift();
     yield "Removed the localized layout for citation. (Discard CSL-M extension)";
   }
