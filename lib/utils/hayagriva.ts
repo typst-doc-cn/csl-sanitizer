@@ -14,6 +14,7 @@ function normalize_csl(cslFilePath: string, savePath: string): Message[] {
 
   const messages = [
     ...remove_duplicate_layouts(csl),
+    ...remove_citation_range_delimiter_terms(csl),
     ...replace_space_et_al_terms(csl),
   ];
 
@@ -33,18 +34,77 @@ function* remove_duplicate_layouts(
 ): Generator<Message, void, void> {
   const bib_layouts = (csl.style as any).bibliography.layout as any[];
   while (bib_layouts.length > 1) {
-    assert(bib_layouts[0]["@locale"]);
+    const lang = bib_layouts[0]["@locale"];
+    assert(lang);
     bib_layouts.shift();
-    yield "Removed the localized layout for bibliography. (Discard CSL-M extension)";
+    yield `Removed the localized (${lang}) layout for bibliography. [Discard CSL-M extension]`;
   }
 
   const cite_layouts = (csl.style as any).citation.layout as any[] | null;
   // Some styles are bibliography-only.
   if (cite_layouts) {
     while (cite_layouts.length > 1) {
-      assert(cite_layouts[0]["@locale"]);
+      const lang = cite_layouts[0]["@locale"];
+      assert(lang);
       cite_layouts.shift();
-      yield "Removed the localized layout for citation. (Discard CSL-M extension)";
+      yield `Removed the localized (${lang}) layout for citation. [Discard CSL-M extension]`;
+    }
+  }
+}
+
+/**
+ * Remove `<term name="citation-range-delimiter">`.
+ *
+ * This is an undocumented feature of citeproc-js.
+ * https://github.com/zotero-chinese/styles/discussions/439
+ */
+function* remove_citation_range_delimiter_terms(
+  csl: xml_document
+): Generator<Message, void, void> {
+  const locales = (csl.style as any).locale as
+    | OneOrMany<{
+        terms: { term: OneOrMany<{ "@name": string; "#text": string }> };
+      }>
+    | undefined;
+
+  if (!locales) {
+    // Skip if no `<locale>` is defined.
+    return;
+  }
+
+  for (const locale of Array.isArray(locales) ? locales : [locales]) {
+    if (locale.terms) {
+      if (locale.terms.term === undefined) {
+        // Theoretically, this block should never be reached.
+        // However, `src/国际政治研究/国际政治研究.csl` puts `<date>` in `<terms>`, hitting the condition.
+        // This might really be a malformed CSL file.
+        // See https://github.com/zotero-chinese/styles/pull/518 for previous investigations.
+        continue;
+      }
+
+      if (Array.isArray(locale.terms.term)) {
+        const terms = locale.terms.term;
+        for (let i = terms.length - 1; i >= 0; i--) {
+          const term = terms[i];
+          if (term["@name"] === "citation-range-delimiter") {
+            const delim = term["#text"];
+            terms.splice(i, 1);
+            yield `Removed the term citation-range-delimiter (${delim}). [Discard citeproc-js extension]`;
+          }
+        }
+      } else {
+        const term = locale.terms.term;
+        if (term["@name"] === "citation-range-delimiter") {
+          const delim = term["#text"];
+
+          // @ts-expect-error
+          delete locale.terms.term;
+          // @ts-expect-error
+          delete locale.terms;
+
+          yield `Removed the term citation-range-delimiter (${delim}) and its wrapping tag. [Discard citeproc-js extension]`;
+        }
+      }
     }
   }
 }
@@ -137,9 +197,9 @@ export function test_hayagriva(cslFilePath: string): Message[] {
 
 for (const csl of [
   "src/历史研究/历史研究.csl",
-  // "src/中国政法大学/中国政法大学.csl",
+  "src/中国政法大学/中国政法大学.csl",
   "src/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）.csl",
-  // "src/food-materials-research/food-materials-research.csl",
+  "src/food-materials-research/food-materials-research.csl",
   // "src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
 ]) {
   try {
