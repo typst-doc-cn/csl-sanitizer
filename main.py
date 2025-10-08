@@ -30,6 +30,8 @@ def normalize_csl(style: ET.Element) -> Generator[Message, None, None]:
     yield from remove_large_long_ordinal_terms(style)
 
     yield from drop_empty_else_branches(style)
+    yield from drop_empty_groups(style)
+
     yield from drop_empty_text_case_attrs(style)
     yield from fix_deprecated_term_unpublished(style)
     yield from lowercase_locator_attrs(style)
@@ -240,6 +242,25 @@ def drop_empty_else_branches(
                 # If it has no child or has only comments
                 choose.remove(else_branch)
                 yield f"Dropped the empty `<else>` branch in a macro ({macro.get('name')}). [Follow CSL spec]"
+
+
+def drop_empty_groups(
+    style: ET.Element,
+) -> Generator[Message, None, None]:
+    """Drop empty `<group>` elements.
+
+    Follow the CSL specification strictly.
+    > The `cs:group` rendering element must contain one or more rendering elements (with the exception of `cs:layout`).
+    https://docs.citationstyles.org/en/stable/specification.html#choose
+    """
+    for macro in style.findall("cs:macro", ns):
+        for parent in macro.findall(".//cs:group/..", ns):
+            group = parent.find("cs:group", ns)
+            assert group is not None
+
+            if len(group) == 0:
+                parent.remove(group)
+                yield f"Dropped an empty `<group>` in a macro ({macro.get('name')}). [Follow CSL spec]"
 
 
 def lowercase_locator_attrs(
