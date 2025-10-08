@@ -65,9 +65,10 @@ def remove_citation_range_delimiter_terms(
     for locale in style.findall(
         ".//cs:term[@name='citation-range-delimiter']/../..", ns
     ):
-        terms = locale.find("./cs:terms", ns)
+        terms = locale.find("cs:terms", ns)
         assert terms is not None
-        term = terms.find("./cs:term[@name='citation-range-delimiter']", ns)
+        # There is at most one such `<term>`, so we use `find` instead of `findall`.
+        term = terms.find("cs:term[@name='citation-range-delimiter']", ns)
         assert term is not None
 
         terms.remove(term)
@@ -88,7 +89,7 @@ def remove_large_long_ordinal_terms(
     https://docs.citationstyles.org/en/stable/specification.html#long-ordinals
     """
     for locale in style.findall(".//cs:term[@name]/../..", ns):
-        terms = locale.find("./cs:terms", ns)
+        terms = locale.find("cs:terms", ns)
         assert terms is not None
 
         for term in terms.findall("./cs:term[@name]", ns):
@@ -228,13 +229,11 @@ def drop_empty_else_branches(
     """
     for macro in style.findall("cs:macro", ns):
         for choose in macro.findall(".//cs:else/..", ns):
-            else_branch = choose.find("cs:else", ns)
-            assert else_branch is not None
-
-            if all(child.tag is ET.Comment for child in else_branch):
-                # If it has no child or has only comments
-                choose.remove(else_branch)
-                yield f"Dropped the empty `<else>` branch in a macro ({macro.get('name')}). [Follow CSL spec]"
+            for else_branch in choose.findall("cs:else", ns):
+                if all(child.tag is ET.Comment for child in else_branch):
+                    # If it has no child or has only comments
+                    choose.remove(else_branch)
+                    yield f"Dropped the empty `<else>` branch in a macro ({macro.get('name')}). [Follow CSL spec]"
 
 
 def drop_empty_groups(
@@ -248,12 +247,11 @@ def drop_empty_groups(
     """
     for macro in style.findall("cs:macro", ns):
         for parent in macro.findall(".//cs:group/..", ns):
-            group = parent.find("cs:group", ns)
-            assert group is not None
-
-            if len(group) == 0:
-                parent.remove(group)
-                yield f"Dropped an empty `<group>` in a macro ({macro.get('name')}). [Follow CSL spec]"
+            for group in parent.findall("cs:group", ns):
+                if all(child.tag is ET.Comment for child in group):
+                    # If it has no child or has only comments
+                    parent.remove(group)
+                    yield f"Dropped an empty `<group>` in a macro ({macro.get('name')}). [Follow CSL spec]"
 
 
 def fill_empty_layouts(
@@ -330,7 +328,7 @@ def main() -> None:
                 "src/中国人民大学/中国人民大学.csl",
                 "src/原子核物理评论/原子核物理评论.csl",
                 "src/信息安全学报/信息安全学报.csl",
-                # "src/导出刊名/导出刊名.csl",
+                "src/导出刊名/导出刊名.csl",
             ]
         else:
             files = Path("src").glob("**/*.csl")
