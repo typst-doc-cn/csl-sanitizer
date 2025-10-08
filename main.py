@@ -29,6 +29,8 @@ def normalize_csl(style: ET.Element) -> Generator[Message, None, None]:
     yield from replace_localized_et_al_terms(style)
     yield from remove_large_long_ordinal_terms(style)
 
+    yield from fix_deprecated_term_unpublished(style)
+
 
 def remove_duplicate_layouts(style: ET.Element) -> Generator[Message, None, None]:
     """Remove additional `<layout>` elements in `<bibliography>` and `<citation>`.
@@ -175,11 +177,28 @@ def replace_nonstandard_original_variables(
                     "original-genre",
                     "original-event-title",
                     "original-editor",
+                    "original-status",
                 ]:
                     repl = v.removeprefix("original-")
                     variables[i] = repl
                     yield f"Replaced the variable `{v}` with `{repl}` in a macro ({macro.get('name')})."
             ref.set("variable", " ".join(variables))
+
+
+def fix_deprecated_term_unpublished(
+    style: ET.Element,
+) -> Generator[Message, None, None]:
+    """Fix the deprecated term `unpublished` with the value `Unpublished`.
+
+    This is specified in the CSL-M extension, but deprecated.
+    https://citeproc-js.readthedocs.io/en/latest/csl-m/index.html#unpublished-extension
+    """
+    for macro in style.findall("cs:macro", ns):
+        for text in macro.findall(".//cs:text[@term='unpublished']", ns):
+            del text.attrib["term"]
+            text.set("value", "Unpublished")
+
+            yield f"Fix the deprecated term `unpublished` with the value `Unpublished` in a macro ({macro.get('name')}). [Fix CSL-M deprecated extension]"
 
 
 def main() -> None:
