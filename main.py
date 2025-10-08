@@ -3,6 +3,7 @@ from collections.abc import Callable, Generator
 from os import getenv
 from pathlib import Path
 from subprocess import run
+from sys import argv
 from typing import Final
 
 ns: Final = {"cs": "http://purl.org/net/xbiblio/csl"}
@@ -177,8 +178,10 @@ def main() -> None:
 
     debug = bool(getenv("DEBUG"))
 
-    files = (
-        [
+    if argv[1:]:
+        files = argv[1:]
+    elif debug:
+        files = [
             "src/历史研究/历史研究.csl",
             "src/中国政法大学/中国政法大学.csl",
             "src/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）.csl",
@@ -190,9 +193,8 @@ def main() -> None:
             "src/信息安全学报/信息安全学报.csl",
             # "src/导出刊名/导出刊名.csl",
         ]
-        if debug
-        else Path("src").glob("**/*.csl")
-    )
+    else:
+        files = Path("src").glob("**/*.csl")
 
     for csl in files:
         tree = ET.parse(
