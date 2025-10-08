@@ -176,8 +176,11 @@ def replace_nonstandard_original_variables(
                     "original-container-title-short",
                     "original-genre",
                     "original-event-title",
+                    "original-event-place",
                     "original-editor",
                     "original-status",
+                    "original-issue",
+                    "original-jurisdiction",
                 ]:
                     repl = v.removeprefix("original-")
                     variables[i] = repl
@@ -209,23 +212,46 @@ def main() -> None:
 
     if argv[1:]:
         files = argv[1:]
-    elif debug:
-        files = [
-            "src/历史研究/历史研究.csl",
-            "src/中国政法大学/中国政法大学.csl",
-            "src/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）.csl",
-            "src/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）.csl",
-            "src/food-materials-research/food-materials-research.csl",
-            "src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
-            "src/中国人民大学/中国人民大学.csl",
-            "src/原子核物理评论/原子核物理评论.csl",
-            "src/信息安全学报/信息安全学报.csl",
-            # "src/导出刊名/导出刊名.csl",
-        ]
+        skipped = {}
     else:
-        files = Path("src").glob("**/*.csl")
+        skipped = {
+            Path(x)
+            for x in {
+                # Self-invented terms and variables—They should be implemented as macros
+                "src/化学进展/化学进展.csl",  # term `thesis-en`
+                "src/环境昆虫学报/环境昆虫学报.csl",  # term `in-en`
+                "src/四川大学-外国语学院（本科）/四川大学-外国语学院（本科）.csl",  # term `no-date`, variable `locale`
+                "src/华东理工大学-社会与公共管理学院/华东理工大学-社会与公共管理学院.csl",  # variable `nationality`
+                "src/数量经济技术经济研究/数量经济技术经济研究.csl",  # variable `container-title-zh`
+                # The nonstandard type `monograph`
+                "src/扬州大学/扬州大学.csl",
+                "src/贵州大学/贵州大学.csl",
+                "src/山东农业大学/山东农业大学.csl",
+                # Other situations
+                "src/人民出版社学术著作引证注释格式（修正版）/人民出版社学术著作引证注释格式（修正版） .csl",  # `<name name-as-sort-order="last">`
+                "src/国际政治研究/国际政治研究.csl",  # `<date>` in `<terms>`
+            }
+        }
+        if debug:
+            files = [
+                "src/历史研究/历史研究.csl",
+                "src/中国政法大学/中国政法大学.csl",
+                "src/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）.csl",
+                "src/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）.csl",
+                "src/food-materials-research/food-materials-research.csl",
+                "src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
+                "src/中国人民大学/中国人民大学.csl",
+                "src/原子核物理评论/原子核物理评论.csl",
+                "src/信息安全学报/信息安全学报.csl",
+                # "src/导出刊名/导出刊名.csl",
+            ]
+        else:
+            files = Path("src").glob("**/*.csl")
 
     for csl in files:
+        if csl in skipped:
+            continue
+
         tree = ET.parse(
             Path(csl), parser=ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
         )
