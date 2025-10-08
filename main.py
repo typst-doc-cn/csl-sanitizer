@@ -30,8 +30,8 @@ def normalize_csl(style: ET.Element) -> Generator[Message, None, None]:
     yield from remove_large_long_ordinal_terms(style)
 
     yield from remove_empty_text_case_attrs(style)
-
     yield from fix_deprecated_term_unpublished(style)
+    yield from lowercase_locator_attrs(style)
 
 
 def remove_duplicate_layouts(style: ET.Element) -> Generator[Message, None, None]:
@@ -219,6 +219,22 @@ def remove_empty_text_case_attrs(
             del elem.attrib["text-case"]
 
             yield f"Removed the empty text-case attribute in a macro ({macro.get('name')})."
+
+
+def lowercase_locator_attrs(
+    style: ET.Element,
+) -> Generator[Message, None, None]:
+    """Convert locator attributes to lowercase.
+
+    Per the CSL spec.
+    https://docs.citationstyles.org/en/stable/specification.html#locators
+    """
+    for macro in style.findall("cs:macro", ns):
+        for elem in macro.findall(".//*[@locator]", ns):
+            if (locator := elem.get("locator")) and locator != locator.lower():
+                elem.set("locator", locator.lower())
+
+                yield f"Lowercased the locator attribute ({locator} -> {locator.lower()}) in a macro ({macro.get('name')})."
 
 
 def main() -> None:

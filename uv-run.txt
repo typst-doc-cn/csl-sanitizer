@@ -2,5 +2,3 @@
 
 - value: 'CSL file malformed: Custom("missing field `$value`")'
   count: 7
-- value: 'CSL file malformed: Custom("invalid locator")'
-  count: 1
