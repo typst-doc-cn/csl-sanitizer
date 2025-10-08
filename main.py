@@ -1,5 +1,196 @@
-def main():
-    print("Hello from csl-sanitizer!")
+import xml.etree.ElementTree as ET
+from collections.abc import Callable, Generator
+from os import getenv
+from pathlib import Path
+from subprocess import run
+from typing import Final
+
+ns: Final = {"cs": "http://purl.org/net/xbiblio/csl"}
+"""The XML namespace"""
+
+ET.register_namespace("", ns["cs"])
+
+Message = str
+
+
+def normalize_csl(style: ET.Element) -> Generator[Message, None, None]:
+    """Normalize `<style>` in a CSL in place."""
+    # For common to uncommon
+
+    yield from remove_duplicate_layouts(style)
+
+    yield from remove_institution_in_names(style)
+
+    yield from remove_citation_range_delimiter_terms(style)
+    yield from replace_space_et_al_terms(style)
+    yield from replace_localized_et_al_terms(style)
+    yield from remove_large_long_ordinal_terms(style)
+
+
+def remove_duplicate_layouts(style: ET.Element) -> Generator[Message, None, None]:
+    """Remove additional `<layout>` elements in `<bibliography>` and `<citation>`.
+
+    They are specified in the CSL-M extension.
+    https://citeproc-js.readthedocs.io/en/latest/csl-m/index.html#cs-layout-extension
+    """
+    bib = style.find("cs:bibliography", ns)
+    assert bib is not None
+    for layout in bib.findall("cs:layout", ns):
+        if (lang := layout.get("locale")) is not None:
+            bib.remove(layout)
+            yield f"Removed the localized ({lang}) layout for bibliography. [Discard CSL-M extension]"
+    assert len(bib.findall("cs:layout", ns)) == 1
+
+    cite = style.find("cs:citation", ns)
+    # Some styles are bibliography-only.
+    if cite is not None:
+        for layout in cite.findall("cs:layout", ns):
+            if (lang := layout.get("locale")) is not None:
+                cite.remove(layout)
+                yield f"Removed the localized ({lang}) layout for citation. [Discard CSL-M extension]"
+        assert len(cite.findall("cs:layout", ns)) == 1
+
+
+def remove_citation_range_delimiter_terms(
+    style: ET.Element,
+) -> Generator[Message, None, None]:
+    """Remove `<term name="citation-range-delimiter">`.
+
+    This is an undocumented feature of citeproc-js.
+    https://github.com/zotero-chinese/styles/discussions/439
+    """
+    for locale in style.findall(
+        ".//cs:term[@name='citation-range-delimiter']/../..", ns
+    ):
+        terms = locale.find("./cs:terms", ns)
+        assert terms is not None
+        term = terms.find("./cs:term[@name='citation-range-delimiter']", ns)
+        assert term is not None
+
+        terms.remove(term)
+        if len(terms) == 0:
+            locale.remove(terms)
+            # For simplicity, keep the `<locale>` even if it might become empty now.
+            yield f"Removed the term citation-range-delimiter ({term.text}) and its wrapping tag. [Discard citeproc-js extension]"
+        else:
+            yield f"Removed the term citation-range-delimiter ({term.text}). [Discard citeproc-js extension]"
+
+
+def remove_large_long_ordinal_terms(
+    style: ET.Element,
+) -> Generator[Message, None, None]:
+    """Remove `<term name="long-ordinal-{n}">` where n > 10.
+
+    This might be an undocumented feature of citeproc-js.
+    https://docs.citationstyles.org/en/stable/specification.html#long-ordinals
+    """
+    for locale in style.findall(".//cs:term[@name]/../..", ns):
+        terms = locale.find("./cs:terms", ns)
+        assert terms is not None
+
+        for term in terms.findall("./cs:term[@name]", ns):
+            if (name := term.get("name")) in ["long-ordinal-11", "long-ordinal-12"]:
+                terms.remove(term)
+                if len(terms) == 0:
+                    locale.remove(terms)
+                    # For simplicity, keep the `<locale>` even if it might become empty now.
+                    yield f"Removed the term {name} ({term.text}) and its wrapping tag."
+                else:
+                    yield f"Removed the term {name} ({term.text})."
+
+
+def _replace_et_al(
+    matches: list[str], repl: str
+) -> Callable[[ET.Element], Generator[Message, None, None]]:
+    def impl(style: ET.Element) -> Generator[Message, None, None]:
+        for term in style.findall(".//cs:term[@name]", ns):
+            if (name := term.get("name")) in matches:
+                term.set("name", repl)
+                yield f"Replaced the term name `{name}` with `{repl}` ({term.text})."
+
+        for et_al in style.findall(".//cs:et-al[@term]", ns):
+            if (term := et_al.get("term")) in matches:
+                et_al.set("term", repl)
+                yield f"Replaced the term `{term}` referenced by `<et-al>` with `{repl}` ({et_al.text})."
+
+    return impl
+
+
+replace_space_et_al_terms = _replace_et_al(["space-et-al"], "et-al")
+"""Replace the term `space-et-al` with `et-al`.
+
+This might be undocumented features of citeproc-js.
+"""
+
+replace_localized_et_al_terms = _replace_et_al(
+    ["en-et-al", "zh-et-al", "et-al-zh"], "et-al"
+)
+"""Replace the localized term `{en,zh}-et-al`/`et-al-zh` with `et-al`.
+
+This might be undocumented features of citeproc-js.
+https://github.com/zotero-chinese/styles/pull/518
+"""
+
+
+def remove_institution_in_names(
+    style: ET.Element,
+) -> Generator[Message, None, None]:
+    """Remove `<institution>` in `<names>`.
+
+    This is specified in the CSL-M extension.
+    https://citeproc-js.readthedocs.io/en/latest/csl-m/index.html#cs-institution-and-friends-extension
+    """
+    for macro in style.findall("cs:macro", ns):
+        for names in macro.findall(".//cs:institution/..", ns):
+            institution = names.find("./cs:institution", ns)
+            assert institution is not None
+
+            names.remove(institution)
+            yield f"Removed the institution in names of a macro ({macro.get('name')}). [Discard CSL-M extension]"
+
+
+def main() -> None:
+    tmp_dir = Path("tmp")
+    tmp_dir.mkdir(exist_ok=True)
+
+    debug = bool(getenv("DEBUG"))
+
+    files = (
+        [
+            "src/历史研究/历史研究.csl",
+            "src/中国政法大学/中国政法大学.csl",
+            "src/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）.csl",
+            "src/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）.csl",
+            "src/food-materials-research/food-materials-research.csl",
+            "src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
+            "src/中国人民大学/中国人民大学.csl",
+        ]
+        if debug
+        else Path("src").glob("**/*.csl")
+    )
+
+    for csl in files:
+        tree = ET.parse(
+            Path(csl), parser=ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
+        )
+        style = tree.getroot()
+
+        for message in normalize_csl(style):
+            if debug:
+                print(message)
+
+        dumped: bytes = ET.tostring(style, encoding="utf-8", xml_declaration=True)
+        (tmp_dir / "a.csl").write_bytes(dumped.replace(b" />", b"/>"))
+
+        result = run(
+            ["hayagriva", "good.yaml", "reference", "--csl", (tmp_dir / "a.csl")],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            print(f"✅ {csl}")
+        else:
+            print(f"💥 {csl}", result.stderr)
 
 
 if __name__ == "__main__":
