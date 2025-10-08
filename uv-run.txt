@@ -1,3 +1,0 @@
-# uv run main.py o+e>| tee { save -f uv-run.log }; cat uv-run.log | ansi strip | rg CSL | lines | uniq -c | sort-by count --reverse | to yaml | bat -l yaml | save uv-run.txt -f
-
-[]
