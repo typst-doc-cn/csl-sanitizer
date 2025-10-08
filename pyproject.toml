@@ -1,0 +1,7 @@
+[project]
+name = "csl-sanitizer"
+version = "0.1.0"
+description = "Sanitize Citation Style Language (CSL) files for hayagriva."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
