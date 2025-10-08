@@ -17,9 +17,11 @@ function normalize_csl(cslFilePath: string, savePath: string): Message[] {
   const csl = parse(fs.readFileSync(cslFilePath, { encoding: "utf-8" }));
 
   const messages = [
+    // Sort from common to uncommon
     ...remove_duplicate_layouts(csl),
     ...remove_citation_range_delimiter_terms(csl),
     ...replace_space_et_al_terms(csl),
+    ...replace_localized_et_al_terms(csl),
     ...remove_institution_in_names(csl),
     ...remove_large_long_ordinal_terms(csl),
   ];
@@ -158,55 +160,75 @@ const remove_large_long_ordinal_terms = remove_terms(
   }
 );
 
+function replace_et_al(
+  matches: string[],
+  repl: string
+): (csl: xml_document) => Generator<Message, void, void> {
+  function* impl(csl: xml_document): Generator<Message, void, void> {
+    const locales = (csl.style as any).locale as
+      | OneOrMany<{
+          terms: { term: OneOrMany<{ "@name": string; "#text": string }> };
+        } | null>
+      | undefined;
+    // `null` means empty `<locale>`.
+
+    if (!locales) {
+      // Skip if no `<locale>` is defined.
+      return;
+    }
+
+    // Replace `<term name="…">`
+    for (const locale of asArray(locales)) {
+      if (locale?.terms) {
+        if (locale.terms.term === undefined) {
+          // Theoretically, this block should never be reached.
+          // However, `src/国际政治研究/国际政治研究.csl` puts `<date>` in `<terms>`, hitting the condition.
+          // This might really be a malformed CSL file.
+          // See https://github.com/zotero-chinese/styles/pull/518 for previous investigations.
+          continue;
+        }
+
+        for (const term of asArray(locale.terms.term)) {
+          if (matches.includes(term["@name"])) {
+            const old = term["@name"];
+            term["@name"] = repl;
+            yield `Replaced the term name \`${old}\` with \`${repl}\` (${term["#text"]}).`;
+          }
+        }
+      }
+    }
+
+    // Replace `<et-al term="…"/>`
+    const macros = (csl.style as any).macro as OneOrMany<Record<string, any>>;
+    for (const macro of asArray(macros)) {
+      const et_al = macro.names?.["et-al"];
+      if (et_al && matches.includes(et_al?.["@term"])) {
+        const old = et_al["@term"];
+        et_al["@term"] = repl;
+        yield `Replaced the term \`${old}\` referenced by \`<et-al>\` with \`${repl}\` (${et_al["#text"]}).`;
+      }
+    }
+  }
+  return impl;
+}
+
 /**
  * Replace the term `space-et-al` with `et-al`.
  *
  * This might be undocumented features of citeproc-js.
  */
-function* replace_space_et_al_terms(
-  csl: xml_document
-): Generator<Message, void, void> {
-  const locales = (csl.style as any).locale as
-    | OneOrMany<{
-        terms: { term: OneOrMany<{ "@name": string }> };
-      } | null>
-    | undefined;
-  // `null` means empty `<locale>`.
+const replace_space_et_al_terms = replace_et_al(["space-et-al"], "et-al");
 
-  if (!locales) {
-    // Skip if no `<locale>` is defined.
-    return;
-  }
-
-  // Replace `<term name="space-et-al">`
-  for (const locale of asArray(locales)) {
-    if (locale?.terms) {
-      if (locale.terms.term === undefined) {
-        // Theoretically, this block should never be reached.
-        // However, `src/国际政治研究/国际政治研究.csl` puts `<date>` in `<terms>`, hitting the condition.
-        // This might really be a malformed CSL file.
-        // See https://github.com/zotero-chinese/styles/pull/518 for previous investigations.
-        continue;
-      }
-
-      for (const term of asArray(locale.terms.term)) {
-        if (term["@name"] === "space-et-al") {
-          term["@name"] = "et-al";
-          yield "Replaced the term name `space-et-al` with `et-al`.";
-        }
-      }
-    }
-  }
-
-  // Replace `<et-al term="space-et-al"/>`
-  const macros = (csl.style as any).macro as OneOrMany<Record<string, any>>;
-  for (const macro of asArray(macros)) {
-    if (macro.names?.["et-al"]?.["@term"] === "space-et-al") {
-      macro.names["et-al"]["@term"] = "et-al";
-      yield "Replaced the term `space-et-al` referenced by `<et-al>` with `et-al`.";
-    }
-  }
-}
+/**
+ * Replace the localized term `{en,zh}-et-al`/`et-al-zh` with `et-al`.
+ *
+ * This might be undocumented features of citeproc-js.
+ * https://github.com/zotero-chinese/styles/pull/518
+ */
+const replace_localized_et_al_terms = replace_et_al(
+  ["en-et-al", "zh-et-al", "et-al-zh"],
+  "et-al"
+);
 
 /**
  * Remove `<institution>` in `<names>`.
@@ -271,6 +293,7 @@ for (const csl of [
   "src/food-materials-research/food-materials-research.csl",
   "src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
   "src/中国人民大学/中国人民大学.csl",
+  // "src/原子核物理评论/原子核物理评论.csl",
   // "src/导出刊名/导出刊名.csl",
 ]) {
   try {
