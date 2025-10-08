@@ -29,6 +29,8 @@ def normalize_csl(style: ET.Element) -> Generator[Message, None, None]:
     yield from replace_localized_et_al_terms(style)
     yield from remove_large_long_ordinal_terms(style)
 
+    yield from remove_empty_text_case_attrs(style)
+
     yield from fix_deprecated_term_unpublished(style)
 
 
@@ -202,6 +204,21 @@ def fix_deprecated_term_unpublished(
             text.set("value", "Unpublished")
 
             yield f"Fix the deprecated term `unpublished` with the value `Unpublished` in a macro ({macro.get('name')}). [Fix CSL-M deprecated extension]"
+
+
+def remove_empty_text_case_attrs(
+    style: ET.Element,
+) -> Generator[Message, None, None]:
+    """Remove empty `text-case` attributes.
+
+    This might be an undocumented feature of citeproc-js.
+    https://docs.citationstyles.org/en/stable/specification.html#text-case
+    """
+    for macro in style.findall("cs:macro", ns):
+        for elem in macro.findall(".//*[@text-case='']", ns):
+            del elem.attrib["text-case"]
+
+            yield f"Removed the empty text-case attribute in a macro ({macro.get('name')})."
 
 
 def main() -> None:

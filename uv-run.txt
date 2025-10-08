@@ -1,8 +1,6 @@
 # uv run main.py o+e>| tee { save -f uv-run.log }; cat uv-run.log | ansi strip | rg CSL | lines | uniq -c | sort-by count --reverse | to yaml | bat -l yaml | save uv-run.txt -f
 
 - value: 'CSL file malformed: Custom("missing field `$value`")'
-  count: 6
-- value: 'CSL file malformed: Custom("unknown variant ``, expected one of `lowercase`, `uppercase`, `capitalize-first`, `capitalize-all`, `sentence`, `title`")'
-  count: 2
+  count: 7
 - value: 'CSL file malformed: Custom("invalid locator")'
   count: 1
