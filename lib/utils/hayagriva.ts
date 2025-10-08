@@ -21,6 +21,7 @@ function normalize_csl(cslFilePath: string, savePath: string): Message[] {
     ...remove_citation_range_delimiter_terms(csl),
     ...replace_space_et_al_terms(csl),
     ...remove_institution_in_names(csl),
+    ...remove_large_long_ordinal_terms(csl),
   ];
 
   fs.writeFileSync(savePath, stringify(csl), { encoding: "utf-8" });
@@ -57,64 +58,105 @@ function* remove_duplicate_layouts(
   }
 }
 
+function remove_terms(
+  should_remove: (term: { "@name": string; "#text": string }) => boolean,
+  build_message: (
+    term: { "@name": string; "#text": string },
+    info: { wrapping_tag_deleted: boolean }
+  ) => Message
+): (csl: xml_document) => Generator<Message, void, void> {
+  function* impl(csl: xml_document): Generator<Message, void, void> {
+    const locales = (csl.style as any).locale as
+      | OneOrMany<{
+          terms: { term: OneOrMany<{ "@name": string; "#text": string }> };
+        } | null>
+      | undefined;
+    // `null` means empty `<locale>`.
+
+    if (!locales) {
+      // Skip if no `<locale>` is defined.
+      return;
+    }
+
+    for (const locale of asArray(locales)) {
+      if (locale?.terms) {
+        if (locale.terms.term === undefined) {
+          // Theoretically, this block should never be reached.
+          // However, `src/国际政治研究/国际政治研究.csl` puts `<date>` in `<terms>`, hitting the condition.
+          // This might really be a malformed CSL file.
+          // See https://github.com/zotero-chinese/styles/pull/518 for previous investigations.
+          continue;
+        }
+
+        if (Array.isArray(locale.terms.term)) {
+          const terms = locale.terms.term;
+          for (let i = terms.length - 1; i >= 0; i--) {
+            const term = terms[i];
+            if (should_remove(term)) {
+              const message = build_message(term, {
+                wrapping_tag_deleted: false,
+              });
+              terms.splice(i, 1);
+              yield message;
+            }
+          }
+        } else {
+          const term = locale.terms.term;
+          if (should_remove(term)) {
+            const message = build_message(term, {
+              wrapping_tag_deleted: true,
+            });
+
+            // @ts-expect-error
+            delete locale.terms.term;
+            // @ts-expect-error
+            delete locale.terms;
+            // For simplicity, keep the `<locale>` even if it might become empty now.
+
+            yield message;
+          }
+        }
+      }
+    }
+  }
+
+  return impl;
+}
+
 /**
  * Remove `<term name="citation-range-delimiter">`.
  *
  * This is an undocumented feature of citeproc-js.
  * https://github.com/zotero-chinese/styles/discussions/439
  */
-function* remove_citation_range_delimiter_terms(
-  csl: xml_document
-): Generator<Message, void, void> {
-  const locales = (csl.style as any).locale as
-    | OneOrMany<{
-        terms: { term: OneOrMany<{ "@name": string; "#text": string }> };
-      } | null>
-    | undefined;
-  // `null` means empty `<locale>`.
-
-  if (!locales) {
-    // Skip if no `<locale>` is defined.
-    return;
+const remove_citation_range_delimiter_terms = remove_terms(
+  (term) => term["@name"] === "citation-range-delimiter",
+  (term, info) => {
+    const delim = term["#text"];
+    const wrapping_tag_deleted = info.wrapping_tag_deleted
+      ? " and its wrapping tag"
+      : "";
+    return `Removed the term citation-range-delimiter (${delim})${wrapping_tag_deleted}. [Discard citeproc-js extension]`;
   }
+);
 
-  for (const locale of asArray(locales)) {
-    if (locale?.terms) {
-      if (locale.terms.term === undefined) {
-        // Theoretically, this block should never be reached.
-        // However, `src/国际政治研究/国际政治研究.csl` puts `<date>` in `<terms>`, hitting the condition.
-        // This might really be a malformed CSL file.
-        // See https://github.com/zotero-chinese/styles/pull/518 for previous investigations.
-        continue;
-      }
-
-      if (Array.isArray(locale.terms.term)) {
-        const terms = locale.terms.term;
-        for (let i = terms.length - 1; i >= 0; i--) {
-          const term = terms[i];
-          if (term["@name"] === "citation-range-delimiter") {
-            const delim = term["#text"];
-            terms.splice(i, 1);
-            yield `Removed the term citation-range-delimiter (${delim}). [Discard citeproc-js extension]`;
-          }
-        }
-      } else {
-        const term = locale.terms.term;
-        if (term["@name"] === "citation-range-delimiter") {
-          const delim = term["#text"];
-
-          // @ts-expect-error
-          delete locale.terms.term;
-          // @ts-expect-error
-          delete locale.terms;
-          // For simplicity, keep the `<locale>` even if it might become empty now.
-
-          yield `Removed the term citation-range-delimiter (${delim}) and its wrapping tag. [Discard citeproc-js extension]`;
-        }
-      }
-    }
+/**
+ * Remove `<term name="long-ordinal-{n}">` where n > 10.
+ *
+ * This might be an undocumented feature of citeproc-js.
+ * https://docs.citationstyles.org/en/stable/specification.html#long-ordinals
+ */
+const remove_large_long_ordinal_terms = remove_terms(
+  (term) => ["long-ordinal-11", "long-ordinal-12"].includes(term["@name"]),
+  (term, info) => {
+    const delim = term["#text"];
+    const name = term["@name"];
+    const wrapping_tag_deleted = info.wrapping_tag_deleted
+      ? " and its wrapping tag"
+      : "";
+    return `Removed the term ${name} (${delim})${wrapping_tag_deleted}.`;
   }
-}
+);
 
 /**
  * Replace the term `space-et-al` with `et-al`.
@@ -228,6 +270,7 @@ for (const csl of [
   "src/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）.csl",
   "src/food-materials-research/food-materials-research.csl",
   "src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
+  "src/中国人民大学/中国人民大学.csl",
   // "src/导出刊名/导出刊名.csl",
 ]) {
   try {
