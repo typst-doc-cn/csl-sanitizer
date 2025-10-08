@@ -29,7 +29,8 @@ def normalize_csl(style: ET.Element) -> Generator[Message, None, None]:
     yield from replace_localized_et_al_terms(style)
     yield from remove_large_long_ordinal_terms(style)
 
-    yield from remove_empty_text_case_attrs(style)
+    yield from drop_empty_else_branches(style)
+    yield from drop_empty_text_case_attrs(style)
     yield from fix_deprecated_term_unpublished(style)
     yield from lowercase_locator_attrs(style)
 
@@ -206,19 +207,39 @@ def fix_deprecated_term_unpublished(
             yield f"Fix the deprecated term `unpublished` with the value `Unpublished` in a macro ({macro.get('name')}). [Fix CSL-M deprecated extension]"
 
 
-def remove_empty_text_case_attrs(
+def drop_empty_text_case_attrs(
     style: ET.Element,
 ) -> Generator[Message, None, None]:
-    """Remove empty `text-case` attributes.
+    """Drop empty `text-case` attributes.
 
-    This might be an undocumented feature of citeproc-js.
+    Follow the CSL specification strictly.
     https://docs.citationstyles.org/en/stable/specification.html#text-case
     """
     for macro in style.findall("cs:macro", ns):
         for elem in macro.findall(".//*[@text-case='']", ns):
             del elem.attrib["text-case"]
 
-            yield f"Removed the empty text-case attribute in a macro ({macro.get('name')})."
+            yield f"Dropped the empty text-case attribute in a macro ({macro.get('name')}). [Follow CSL spec]"
+
+
+def drop_empty_else_branches(
+    style: ET.Element,
+) -> Generator[Message, None, None]:
+    """Drop empty `<else>` branches.
+
+    Follow the CSL specification strictly.
+    > As an empty `cs:else` element would be superfluous, `cs:else` must contain at least one rendering element.
+    https://docs.citationstyles.org/en/stable/specification.html#choose
+    """
+    for macro in style.findall("cs:macro", ns):
+        for choose in macro.findall(".//cs:else/..", ns):
+            else_branch = choose.find("cs:else", ns)
+            assert else_branch is not None
+
+            if all(child.tag is ET.Comment for child in else_branch):
+                # If it has no child or has only comments
+                choose.remove(else_branch)
+                yield f"Dropped the empty `<else>` branch in a macro ({macro.get('name')}). [Follow CSL spec]"
 
 
 def lowercase_locator_attrs(
@@ -226,7 +247,7 @@ def lowercase_locator_attrs(
 ) -> Generator[Message, None, None]:
     """Convert locator attributes to lowercase.
 
-    Per the CSL spec.
+    Follow the CSL specification strictly.
     https://docs.citationstyles.org/en/stable/specification.html#locators
     """
     for macro in style.findall("cs:macro", ns):
@@ -234,7 +255,7 @@ def lowercase_locator_attrs(
             if (locator := elem.get("locator")) and locator != locator.lower():
                 elem.set("locator", locator.lower())
 
-                yield f"Lowercased the locator attribute ({locator} -> {locator.lower()}) in a macro ({macro.get('name')})."
+                yield f"Lowercased the locator attribute ({locator} -> {locator.lower()}) in a macro ({macro.get('name')}). [Follow CSL spec]"
 
 
 def main() -> None:
