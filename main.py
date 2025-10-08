@@ -162,14 +162,24 @@ def replace_nonstandard_original_variables(
     """
     for macro in style.findall("cs:macro", ns):
         for ref in macro.findall(".//*[@variable]", ns):
-            if (variable := ref.get("variable")) in [
-                "original-container-title",
-                "original-genre",
-                "original-event-title",
-            ]:
-                repl = variable.removeprefix("original-")
-                ref.set("variable", repl)
-                yield f"Replaced the variable `{variable}` with `{repl}` in a macro ({macro.get('name')})."
+            raw = ref.get("variable")
+            assert raw is not None
+
+            # `<if variable="…" match="…">` might contain multiple variables
+            variables = raw.split()
+            for i in range(len(variables)):
+                v = variables[i]
+                if v in [
+                    "original-container-title",
+                    "original-container-title-short",
+                    "original-genre",
+                    "original-event-title",
+                    "original-editor",
+                ]:
+                    repl = v.removeprefix("original-")
+                    variables[i] = repl
+                    yield f"Replaced the variable `{v}` with `{repl}` in a macro ({macro.get('name')})."
+            ref.set("variable", " ".join(variables))
 
 
 def main() -> None:
@@ -217,7 +227,7 @@ def main() -> None:
         if result.returncode == 0:
             print(f"✅ {csl}")
         else:
-            print(f"💥 {csl}", result.stderr)
+            print(f"💥 {csl}", result.stderr, sep="")
 
 
 if __name__ == "__main__":
