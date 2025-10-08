@@ -116,7 +116,7 @@ def _replace_et_al(
         for et_al in style.findall(".//cs:et-al[@term]", ns):
             if (term := et_al.get("term")) in matches:
                 et_al.set("term", repl)
-                yield f"Replaced the term `{term}` referenced by `<et-al>` with `{repl}` ({et_al.text})."
+                yield f"Replaced the term `{term}` referenced by `<et-al>` with `{repl}`."
 
     return impl
 
