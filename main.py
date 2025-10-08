@@ -19,6 +19,8 @@ def normalize_csl(style: ET.Element) -> Generator[Message, None, None]:
 
     yield from remove_duplicate_layouts(style)
 
+    yield from replace_nonstandard_original_variables(style)
+
     yield from remove_institution_in_names(style)
 
     yield from remove_citation_range_delimiter_terms(style)
@@ -149,6 +151,26 @@ def remove_institution_in_names(
             yield f"Removed the institution in names of a macro ({macro.get('name')}). [Discard CSL-M extension]"
 
 
+def replace_nonstandard_original_variables(
+    style: ET.Element,
+) -> Generator[Message, None, None]:
+    """Replace non-standard `original-*` variables like `original-container-title` with un-original ones.
+
+    They might be undocumented features of citeproc-js.
+    https://github.com/zotero-chinese/styles/pull/518
+    """
+    for macro in style.findall("cs:macro", ns):
+        for ref in macro.findall(".//*[@variable]", ns):
+            if (variable := ref.get("variable")) in [
+                "original-container-title",
+                "original-genre",
+                "original-event-title",
+            ]:
+                repl = variable.removeprefix("original-")
+                ref.set("variable", repl)
+                yield f"Replaced the variable `{variable}` with `{repl}` in a macro ({macro.get('name')})."
+
+
 def main() -> None:
     tmp_dir = Path("tmp")
     tmp_dir.mkdir(exist_ok=True)
@@ -164,6 +186,9 @@ def main() -> None:
             "src/food-materials-research/food-materials-research.csl",
             "src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
             "src/中国人民大学/中国人民大学.csl",
+            "src/原子核物理评论/原子核物理评论.csl",
+            "src/信息安全学报/信息安全学报.csl",
+            # "src/导出刊名/导出刊名.csl",
         ]
         if debug
         else Path("src").glob("**/*.csl")
