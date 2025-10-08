@@ -31,6 +31,7 @@ def normalize_csl(style: ET.Element) -> Generator[Message, None, None]:
 
     yield from drop_empty_else_branches(style)
     yield from drop_empty_groups(style)
+    yield from fill_empty_layouts(style)
 
     yield from drop_empty_text_case_attrs(style)
     yield from fix_deprecated_term_unpublished(style)
@@ -43,22 +44,14 @@ def remove_duplicate_layouts(style: ET.Element) -> Generator[Message, None, None
     They are specified in the CSL-M extension.
     https://citeproc-js.readthedocs.io/en/latest/csl-m/index.html#cs-layout-extension
     """
-    bib = style.find("cs:bibliography", ns)
-    assert bib is not None
-    for layout in bib.findall("cs:layout", ns):
-        if (lang := layout.get("locale")) is not None:
-            bib.remove(layout)
-            yield f"Removed the localized ({lang}) layout for bibliography. [Discard CSL-M extension]"
-    assert len(bib.findall("cs:layout", ns)) == 1
-
-    cite = style.find("cs:citation", ns)
-    # Some styles are bibliography-only.
-    if cite is not None:
-        for layout in cite.findall("cs:layout", ns):
+    for tag in ["bibliography", "citation"]:
+        elem = style.find(f"cs:{tag}", ns)
+        assert elem is not None
+        for layout in elem.findall("cs:layout", ns):
             if (lang := layout.get("locale")) is not None:
-                cite.remove(layout)
-                yield f"Removed the localized ({lang}) layout for citation. [Discard CSL-M extension]"
-        assert len(cite.findall("cs:layout", ns)) == 1
+                elem.remove(layout)
+                yield f"Removed the localized ({lang}) layout for {tag}. [Discard CSL-M extension]"
+        assert len(elem.findall("cs:layout", ns)) == 1
 
 
 def remove_citation_range_delimiter_terms(
@@ -261,6 +254,25 @@ def drop_empty_groups(
             if len(group) == 0:
                 parent.remove(group)
                 yield f"Dropped an empty `<group>` in a macro ({macro.get('name')}). [Follow CSL spec]"
+
+
+def fill_empty_layouts(
+    style: ET.Element,
+) -> Generator[Message, None, None]:
+    """Fill empty `<layout>` elements with empty `<text>` elements.
+
+    Follow the CSL specification strictly.
+    > The `cs:layout` rendering element is a required child element of `cs:citation` and `cs:bibliography`.
+    > It must contain one or more of the other rendering elements described below…
+    https://docs.citationstyles.org/en/stable/specification.html#layout-1
+    """
+    for tag in ["bibliography", "citation"]:
+        elem = style.find(f"cs:{tag}", ns)
+        assert elem is not None
+        for layout in elem.findall("cs:layout", ns):
+            if len(layout) == 0:
+                ET.SubElement(layout, "text", {"value": ""})
+                yield f"Fill the empty `<layout>` with an empty `<text>` for {tag}. [Follow CSL spec]"
 
 
 def lowercase_locator_attrs(
