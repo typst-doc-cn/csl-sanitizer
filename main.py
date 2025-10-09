@@ -374,10 +374,18 @@ class IndexEntry:
 
 
 def make_index(index: Iterable[IndexEntry], dist_dir: Path) -> str:
+    readme_full = (Path(__file__).parent / "README.md").read_text(encoding="utf-8")
+    readme = readme_full[
+        slice(
+            readme_full.find("<!-- included by main.py: start -->"),
+            readme_full.find("<!-- included by main.py: end -->"),
+        )
+    ]
+
     lines = deque(
         [
             """---
-title: 可用于 hayagriva 的中文 CSL 样式
+title: 可用于 hayagriva 的 CSL 样式
 lang: zh
 header-includes: |
     <style>
@@ -388,8 +396,31 @@ header-includes: |
     a:hover {
         text-decoration: underline;
     }
+    code {
+        margin-inline: 0.25em;
+    }
+    p {
+        line-height: 1.5em;
+    }
+    li > p {
+        margin-block: 0.5em;
+    }
+    li {
+        margin-block: 1.5em;
+    }
+    li li {
+        margin-block: 0.5em;
+    }
+
+    /* Special style for the README */
+    ul:first-of-type > li {
+        margin-block: 0.5em;
+    }
     </style>
----"""
+---""",
+            "将 [Citation Style Language (CSL)](https://citationstyles.org) 样式处理成 [hayagriva](https://github.com/typst/hayagriva) 可用的文件。",
+            readme,
+            "## 为 hayagriva 修改过的[中文 CSL 样式](https://zotero-chinese.com/styles/)",
         ]
     )
 
