@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        可用于 hayagriva 的中文 CSL 样式
 // @namespace   Violentmonkey Scripts
-// @version     0.1.1
+// @version     0.1.2
 // @description 向 Zotero 中文社区 CSL 样式页面添加可用于 hayagriva 的 CSL 文件。
 // @author      Y.D.X.
 // @match       https://zotero-chinese.com/styles/*
@@ -31,6 +31,9 @@
     const csl_id = document.querySelector(
       ".el-descriptions__table > tbody > tr:nth-child(1) > td:nth-child(2)",
     ).textContent;
+    const csl_updated = document.querySelector(
+      ".el-descriptions__table > tbody > tr:nth-child(5) > td:nth-child(4)",
+    ).textContent;
     const entry = index[csl_id];
 
     /** @type {Element[]} */
@@ -46,7 +49,7 @@
       ].join(" · ");
       elements.push(p);
 
-      if (entry.changes) {
+      if (entry.changes.length > 0) {
         const details = document.createElement("details");
         details.innerHTML = "<summary>简要更改内容</summary><ul></ul>";
         const ul = details.querySelector("ul");
@@ -59,6 +62,13 @@
       } else {
         const p = document.createElement("p");
         p.textContent = "（无需更改，直接可用）";
+        elements.push(p);
+      }
+
+      if (entry.updated !== csl_updated) {
+        const p = document.createElement("p");
+        p.innerHTML =
+          `注意：此版本修改自 ${entry.updated} 版本，并非最新版；可<a href="${NEW_ISSUE}">联系更新</a>。`;
         elements.push(p);
       }
     } else {
