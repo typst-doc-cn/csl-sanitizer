@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 from collections import deque
 from collections.abc import Callable, Generator
+from difflib import HtmlDiff
 from os import getenv
 from pathlib import Path
 from subprocess import run
@@ -375,6 +376,16 @@ def main() -> None:
         # Save processed CSL
         dumped: bytes = ET.tostring(style, encoding="utf-8", xml_declaration=True)
         save_csl.write_bytes(dumped.replace(b" />", b"/>"))
+
+        # Save diff
+        diff = HtmlDiff(wrapcolumn=50).make_file(
+            csl.read_text(encoding="utf-8").splitlines(keepends=True),
+            save_csl.read_text(encoding="utf-8").splitlines(keepends=True),
+            "Original",
+            "Sanitized",
+            context=True,
+        )
+        (save_dir / "diff.html").write_text(diff, encoding="utf-8")
 
         # 3. Check
 
