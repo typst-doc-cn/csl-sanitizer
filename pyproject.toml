@@ -5,3 +5,15 @@ description = "Sanitize Citation Style Language (CSL) files for hayagriva."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
+
+[tool.ruff]
+# Git submodules in styles/ contain python files.
+extend-exclude = ["styles/"]
+
+[tool.ruff.lint]
+extend-select = [
+    "U",
+    "TYP",
+    "F",
+    "I",
+]

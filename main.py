@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+from collections import deque
 from collections.abc import Callable, Generator
 from os import getenv
 from pathlib import Path
@@ -289,68 +290,96 @@ def lowercase_locator_attrs(
                 yield f"Lowercased the locator attribute ({locator} -> {locator.lower()}) in a macro ({macro.get('name')}). [Follow CSL spec]"
 
 
-def main() -> None:
-    tmp_dir = Path("tmp")
-    tmp_dir.mkdir(exist_ok=True)
-
-    debug = bool(getenv("DEBUG"))
-
-    if argv[1:]:
-        files = argv[1:]
-        skipped = {}
-    else:
+def parse_args(
+    args: list[str], debug: bool, styles_dir: Path
+) -> Generator[Path, None, None]:
+    """Determine CSL files to be processed."""
+    if "all" in args or (not args and not debug):
         skipped = {
-            Path(x)
+            styles_dir / x
             for x in {
                 # Self-invented terms and variables—They should be implemented as macros
-                "styles/chinese/src/化学进展/化学进展.csl",  # term `thesis-en`
-                "styles/chinese/src/环境昆虫学报/环境昆虫学报.csl",  # term `in-en`
-                "styles/chinese/src/四川大学-外国语学院（本科）/四川大学-外国语学院（本科）.csl",  # term `no-date`, variable `locale`
-                "styles/chinese/src/华东理工大学-社会与公共管理学院/华东理工大学-社会与公共管理学院.csl",  # variable `nationality`
-                "styles/chinese/src/数量经济技术经济研究/数量经济技术经济研究.csl",  # variable `container-title-zh`
+                "chinese/src/化学进展/化学进展.csl",  # term `thesis-en`
+                "chinese/src/环境昆虫学报/环境昆虫学报.csl",  # term `in-en`
+                "chinese/src/四川大学-外国语学院（本科）/四川大学-外国语学院（本科）.csl",  # term `no-date`, variable `locale`
+                "chinese/src/华东理工大学-社会与公共管理学院/华东理工大学-社会与公共管理学院.csl",  # variable `nationality`
+                "chinese/src/数量经济技术经济研究/数量经济技术经济研究.csl",  # variable `container-title-zh`
                 # The nonstandard type `monograph`
-                "styles/chinese/src/扬州大学/扬州大学.csl",
-                "styles/chinese/src/贵州大学/贵州大学.csl",
-                "styles/chinese/src/山东农业大学/山东农业大学.csl",
+                "chinese/src/扬州大学/扬州大学.csl",
+                "chinese/src/贵州大学/贵州大学.csl",
+                "chinese/src/山东农业大学/山东农业大学.csl",
                 # Other situations
-                "styles/chinese/src/人民出版社学术著作引证注释格式（修正版）/人民出版社学术著作引证注释格式（修正版） .csl",  # `<name name-as-sort-order="last">`
-                "styles/chinese/src/国际政治研究/国际政治研究.csl",  # `<date>` in `<terms>`
+                "chinese/src/人民出版社学术著作引证注释格式（修正版）/人民出版社学术著作引证注释格式（修正版） .csl",  # `<name name-as-sort-order="last">`
+                "chinese/src/国际政治研究/国际政治研究.csl",  # `<date>` in `<terms>`
             }
         }
-        if debug:
-            files = [
-                "styles/chinese/src/历史研究/历史研究.csl",
-                "styles/chinese/src/中国政法大学/中国政法大学.csl",
-                "styles/chinese/src/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）.csl",
-                "styles/chinese/src/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）.csl",
-                "styles/chinese/src/food-materials-research/food-materials-research.csl",
-                "styles/chinese/src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
-                "styles/chinese/src/中国人民大学/中国人民大学.csl",
-                "styles/chinese/src/原子核物理评论/原子核物理评论.csl",
-                "styles/chinese/src/信息安全学报/信息安全学报.csl",
-                "styles/chinese/src/导出刊名/导出刊名.csl",
-            ]
+        for f in styles_dir.glob("**/*.csl"):
+            if f not in skipped:
+                yield f
+    else:
+        if args:
+            yield from (Path(x) for x in args)
         else:
-            files = Path("styles").glob("**/*.csl")
+            yield from (
+                styles_dir / x
+                for x in [
+                    "chinese/src/历史研究/历史研究.csl",
+                    "chinese/src/中国政法大学/中国政法大学.csl",
+                    "chinese/src/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）.csl",
+                    "chinese/src/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）/GB-T-7714—2005（著者-出版年，双语，姓名不大写，无URL）.csl",
+                    "chinese/src/food-materials-research/food-materials-research.csl",
+                    "chinese/src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl",
+                    "chinese/src/中国人民大学/中国人民大学.csl",
+                    "chinese/src/原子核物理评论/原子核物理评论.csl",
+                    "chinese/src/信息安全学报/信息安全学报.csl",
+                    "chinese/src/导出刊名/导出刊名.csl",
+                ]
+            )
+
+
+def main() -> None:
+    styles_dir = Path("styles")
+    assert styles_dir.exists()
+
+    dist_dir = Path("dist")
+    dist_dir.mkdir(exist_ok=True)
+
+    debug = bool(getenv("DEBUG"))
+    files = parse_args(argv[1:], debug, styles_dir)
 
     for csl in files:
-        if csl in skipped:
-            continue
+        # 1. Normalize
 
         tree = ET.parse(
-            Path(csl), parser=ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
+            csl, parser=ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
         )
         style = tree.getroot()
 
+        messages: deque[Message] = deque()
         for message in normalize_csl(style):
+            messages.append(message)
             if debug:
                 print(message)
 
+        # 2. Save
+
+        save_csl = dist_dir / csl.relative_to(styles_dir)
+        save_dir = save_csl.parent
+
+        # Save messages
+        save_dir.mkdir(exist_ok=True, parents=True)
+        (save_dir / "messages.txt").write_text(
+            "\n".join(messages) + "\n", encoding="utf-8"
+        )
+
+        # Save processed CSL
         dumped: bytes = ET.tostring(style, encoding="utf-8", xml_declaration=True)
-        (tmp_dir / "a.csl").write_bytes(dumped.replace(b" />", b"/>"))
+        save_csl.write_bytes(dumped.replace(b" />", b"/>"))
+
+        # 3. Check
 
         result = run(
-            ["hayagriva", "good.yaml", "reference", "--csl", (tmp_dir / "a.csl")],
+            ["hayagriva", "good.yaml", "reference", "--csl", save_csl],
             capture_output=True,
             text=True,
         )
