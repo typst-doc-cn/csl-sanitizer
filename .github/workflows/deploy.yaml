@@ -29,6 +29,10 @@ jobs:
           tar -xf hayagriva-x86_64-unknown-linux-musl.tar.xz
           mkdir -p ~/.local/bin/
           mv ./hayagriva-x86_64-unknown-linux-musl/hayagriva ~/.local/bin/
+      - name: Setup zh_CN.UTF-8 locale
+        run: |
+          sudo locale-gen zh_CN.UTF-8
+          locale --all-locales
       - uses: actions/configure-pages@v5
       - run: python main.py
       - uses: actions/upload-pages-artifact@v4
