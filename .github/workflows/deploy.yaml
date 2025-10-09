@@ -35,6 +35,7 @@ jobs:
           locale --all-locales
       - uses: actions/configure-pages@v5
       - run: python main.py
+      - run: cp main.user.js ./dist/
       - uses: actions/upload-pages-artifact@v4
         with:
           path: ./dist/

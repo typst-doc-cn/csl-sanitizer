@@ -425,7 +425,7 @@ header-includes: |
 ---""",
             "将 [Citation Style Language (CSL)](https://citationstyles.org) 样式处理成 [hayagriva](https://github.com/typst/hayagriva) 可用的文件。",
             readme,
-            "## 为 hayagriva 修改过的[中文 CSL 样式](https://zotero-chinese.com/styles/)",
+            "## 为 hayagriva 修改过的[中文 CSL 样式](https://zotero-chinese.com/styles/) {#style-list}",
         ]
     )
 
@@ -448,7 +448,7 @@ header-includes: |
     return run(
         [
             "pandoc",
-            "--from=gfm",
+            "--from=gfm+attributes",
             "--to=html",
             "--standalone",
         ],

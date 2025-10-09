@@ -15,6 +15,8 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 
 The targeted hayagriva version: [2025-09-26 `799cfdc`](https://github.com/typst/hayagriva/tree/799cfdc) ([download](https://github.com/typst-community/dev-builds/releases/tag/hayagriva-main.2025-09-26.799cfdc)).
 
+Usage: [Go to the CSL file list](https://typst-doc-cn.github.io/csl-sanitizer/#style-list), or [install the browser user script](https://typst-doc-cn.github.io/csl-sanitizer/main.user.js) and view at [Zotero Chinese community’s CSL styles page](https://zotero-chinese.com/styles/).
+
 ## Motivation
 
 Due to the diversity of implementations, **many CSL files go beyond the [CSL specification](https://docs.citationstyles.org/en/stable/specification.html)**, and some even go beyond the [CSL-M extension](https://citeproc-js.readthedocs.io/en/latest/csl-m/).
