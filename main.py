@@ -1,9 +1,11 @@
 import json
+import re
 import xml.etree.ElementTree as ET
 from collections import deque
 from collections.abc import Callable, Generator, Iterable
 from dataclasses import dataclass
 from difflib import HtmlDiff
+from locale import LC_COLLATE, setlocale, strxfrm
 from os import getenv
 from pathlib import Path
 from subprocess import run
@@ -14,6 +16,8 @@ ns: Final = {"cs": "http://purl.org/net/xbiblio/csl"}
 """The XML namespace"""
 
 ET.register_namespace("", ns["cs"])
+
+setlocale(LC_COLLATE, "zh_CN.UTF-8")  # Required by `sort_by_csl_title`
 
 Message = str
 
@@ -472,6 +476,20 @@ def make_json_index(index: Iterable[IndexEntry], dist_dir: Path) -> str:
     )
 
 
+def sort_by_csl_title(x: IndexEntry) -> tuple[int | str, ...]:
+    # An approximate implementation of zotero-chinese ordering.
+    # https://github.com/zotero-chinese/website/blob/44aa0926f43fe5607b5d135fcad31449f9c5ed3a/src/.vitepress/data/styles.data.ts#L17-L29
+
+    if x.info.title.startswith("GB/T 7714—"):
+        year = int(x.info.title.removeprefix("GB/T 7714—")[:4])
+        text = x.info.title.removeprefix("GB/T 7714—")[4:]
+        return (0, -year, strxfrm(text))
+    elif not re.match(r"[A-Z]", x.info.title[0]):
+        return (1, strxfrm(x.info.title))
+    else:
+        return (2, strxfrm(x.info.title))
+
+
 def main() -> None:
     styles_dir = Path("styles")
     assert styles_dir.exists()
@@ -542,11 +560,13 @@ def main() -> None:
             print(f"💥 {csl}", result.stderr, sep="")
             success = False
 
+    # Sort and save indices
+    index_sorted = sorted(index, key=sort_by_csl_title)
     (dist_dir / "index.html").write_text(
-        make_human_index(index, dist_dir), encoding="utf-8"
+        make_human_index(index_sorted, dist_dir), encoding="utf-8"
     )
     (dist_dir / "index.json").write_text(
-        make_json_index(index, dist_dir), encoding="utf-8"
+        make_json_index(index_sorted, dist_dir), encoding="utf-8"
     )
 
     if not success:
