@@ -1,12 +1,13 @@
 import xml.etree.ElementTree as ET
 from collections import deque
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterable
+from dataclasses import dataclass
 from difflib import HtmlDiff
 from os import getenv
 from pathlib import Path
 from subprocess import run
 from sys import argv
-from typing import Final
+from typing import Final, Self
 
 ns: Final = {"cs": "http://purl.org/net/xbiblio/csl"}
 """The XML namespace"""
@@ -294,7 +295,7 @@ def lowercase_locator_attrs(
 def parse_args(
     args: list[str], debug: bool, styles_dir: Path
 ) -> Generator[Path, None, None]:
-    """Determine CSL files to be processed."""
+    """Determine CSL files to be sanitized."""
     if "all" in args or (not args and not debug):
         skipped = {
             styles_dir / x
@@ -338,6 +339,90 @@ def parse_args(
             )
 
 
+@dataclass
+class CslInfo:
+    title: str
+    id: str
+    updated: str
+
+    @classmethod
+    def from_style(cls, style: ET.Element) -> Self:
+        info = style.find("cs:info", ns)
+        assert info is not None
+
+        title = info.find("cs:title", ns)
+        assert title is not None and title.text is not None
+
+        id_ = info.find("cs:id", ns)
+        assert id_ is not None and id_.text is not None
+
+        updated = info.find("cs:updated", ns)
+        assert updated is not None and updated.text is not None
+
+        return cls(title=title.text, id=id_.text, updated=updated.text)
+
+
+@dataclass
+class IndexEntry:
+    info: CslInfo
+    sanitized: Path
+    original: Path
+    diff: Path
+    """Path to side by side comparison with change highlights."""
+    changes: Iterable[str]
+    """Brief descriptions of the changes."""
+
+
+def make_index(index: Iterable[IndexEntry], dist_dir: Path) -> str:
+    lines = deque(
+        [
+            """---
+title: 可用于 hayagriva 的中文 CSL 样式
+lang: zh
+header-includes: |
+    <style>
+    a, a:visited {
+        color: rgb(52, 81, 178);
+        text-decoration: none;
+    }
+    a:hover {
+        text-decoration: underline;
+    }
+    </style>
+---"""
+        ]
+    )
+
+    for entry in index:
+        lines.extend(
+            [
+                f"- **[{entry.info.title}]({entry.info.id.replace('http://', 'https://')})**",
+                "  【"
+                f"[下载修改版本](./{entry.sanitized.relative_to(dist_dir).as_posix()}) · "
+                f"[查看详细更改](./{entry.diff.relative_to(dist_dir).as_posix()})"
+                "】",
+                "  <details><summary>简要更改内容</summary>\n\n"
+                f"{'\n'.join(f'  - {change}' for change in entry.changes)}\n\n"
+                "  </details>"
+                if entry.changes
+                else "  （无需更改，直接可用）",
+            ]
+        )
+
+    return run(
+        [
+            "pandoc",
+            "--from=gfm",
+            "--to=html",
+            "--standalone",
+        ],
+        text=True,
+        capture_output=True,
+        check=True,
+        input="\n\n".join(lines),
+    ).stdout
+
+
 def main() -> None:
     styles_dir = Path("styles")
     assert styles_dir.exists()
@@ -348,6 +433,8 @@ def main() -> None:
     debug = bool(getenv("DEBUG"))
     files = parse_args(argv[1:], debug, styles_dir)
 
+    index: deque[IndexEntry] = deque()
+    success = True
     for csl in files:
         # 1. Normalize
 
@@ -356,9 +443,9 @@ def main() -> None:
         )
         style = tree.getroot()
 
-        messages: deque[Message] = deque()
+        changes: deque[Message] = deque()
         for message in normalize_csl(style):
-            messages.append(message)
+            changes.append(message)
             if debug:
                 print(message)
 
@@ -366,14 +453,9 @@ def main() -> None:
 
         save_csl = dist_dir / csl.relative_to(styles_dir)
         save_dir = save_csl.parent
-
-        # Save messages
         save_dir.mkdir(exist_ok=True, parents=True)
-        (save_dir / "messages.txt").write_text(
-            "\n".join(messages) + "\n", encoding="utf-8"
-        )
 
-        # Save processed CSL
+        # Save sanitized CSL
         dumped: bytes = ET.tostring(style, encoding="utf-8", xml_declaration=True)
         save_csl.write_bytes(dumped.replace(b" />", b"/>"))
 
@@ -387,6 +469,17 @@ def main() -> None:
         )
         (save_dir / "diff.html").write_text(diff, encoding="utf-8")
 
+        # Create index entry
+        index.append(
+            IndexEntry(
+                info=CslInfo.from_style(style),
+                changes=changes,
+                original=csl,
+                sanitized=save_csl,
+                diff=save_dir / "diff.html",
+            )
+        )
+
         # 3. Check
 
         result = run(
@@ -398,6 +491,12 @@ def main() -> None:
             print(f"✅ {csl}")
         else:
             print(f"💥 {csl}", result.stderr, sep="")
+            success = False
+
+    (dist_dir / "index.html").write_text(make_index(index, dist_dir), encoding="utf-8")
+
+    if not success:
+        exit(1)
 
 
 if __name__ == "__main__":
