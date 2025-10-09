@@ -64,6 +64,7 @@
     } else {
       const p = document.createElement("p");
       p.innerHTML = `尚不支持此样式，可<a href="${NEW_ISSUE}">联系更新</a>。`;
+      elements.push(p);
     }
 
     for (const el of elements) {
