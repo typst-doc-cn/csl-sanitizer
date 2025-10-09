@@ -10,6 +10,8 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 - Replace non-standard syntaxes with equivalent or approximate ones
 - Keep the change minimal and understandable
 
+The targeted hayagriva version: [2025-09-26 `799cfdc`](https://github.com/typst/hayagriva/tree/799cfdc) ([download](https://github.com/typst-community/dev-builds/releases/tag/hayagriva-main.2025-09-26.799cfdc)).
+
 ## Motivation
 
 Due to the diversity of implementations, **many CSL files go beyond the [CSL specification](https://docs.citationstyles.org/en/stable/specification.html)**, and some even go beyond the [CSL-M extension](https://citeproc-js.readthedocs.io/en/latest/csl-m/).

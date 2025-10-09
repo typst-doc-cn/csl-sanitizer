@@ -1,0 +1,31 @@
+name: Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  merge_group:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - uses: pandoc/actions/setup@v1
+      - name: Setup hayagriva
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          curl -LO https://github.com/typst-community/dev-builds/releases/download/hayagriva-main.2025-09-26.799cfdc/hayagriva-x86_64-unknown-linux-musl.tar.xz
+          tar -xf hayagriva-x86_64-unknown-linux-musl.tar.xz
+          mkdir -p ~/.local/bin/
+          mv ./hayagriva-x86_64-unknown-linux-musl/hayagriva ~/.local/bin/
+      - uses: actions/configure-pages@v5
+      - run: python main.py
+      - uses: actions/upload-artifact@v4
+        with:
+          path: ./dist/

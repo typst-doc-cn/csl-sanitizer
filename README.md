@@ -12,6 +12,8 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 - 替换非标准语法为等价或近似内容
 - 尽量避免多余更改以保持清晰易懂
 
+针对的 hayagriva 版本：[2025-09-26 `799cfdc`](https://github.com/typst/hayagriva/tree/799cfdc)（[下载](https://github.com/typst-community/dev-builds/releases/tag/hayagriva-main.2025-09-26.799cfdc)）。
+
 ## 初心
 
 由于实现方式纷繁复杂，**许多 CSL 样式超出了 [CSL 规范](https://docs.citationstyles.org/en/stable/specification.html)**，有些甚至还超出了 [CSL-M 扩展](https://citeproc-js.readthedocs.io/en/latest/csl-m/)。在 300+ [中文 CSL 样式](https://zotero-chinese.com/styles/)中，约 74% 会被 hayagriva（[Typst](https://typst.app/home) 所用实现）判为 malformed，但它们都能被 [citeproc-js](https://citeproc-js.readthedocs.io/en/latest/)（[Zotero](https://www.zotero.org/) 所用实现）接受。
