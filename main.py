@@ -1,3 +1,4 @@
+import json
 import xml.etree.ElementTree as ET
 from collections import deque
 from collections.abc import Callable, Generator, Iterable
@@ -373,7 +374,7 @@ class IndexEntry:
     """Brief descriptions of the changes."""
 
 
-def make_index(index: Iterable[IndexEntry], dist_dir: Path) -> str:
+def make_human_index(index: Iterable[IndexEntry], dist_dir: Path) -> str:
     readme_full = (Path(__file__).parent / "README.md").read_text(encoding="utf-8")
     readme = readme_full[
         slice(
@@ -454,6 +455,23 @@ header-includes: |
     ).stdout
 
 
+def make_json_index(index: Iterable[IndexEntry], dist_dir: Path) -> str:
+    return json.dumps(
+        {
+            entry.info.id: {
+                "title": entry.info.title,
+                "updated": entry.info.updated,
+                "sanitized_url": f"./{entry.sanitized.relative_to(dist_dir).as_posix()}",
+                "diff_url": f"./{entry.diff.relative_to(dist_dir).as_posix()}",
+                "changes": list(entry.changes),
+            }
+            for entry in index
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
+
+
 def main() -> None:
     styles_dir = Path("styles")
     assert styles_dir.exists()
@@ -524,7 +542,12 @@ def main() -> None:
             print(f"💥 {csl}", result.stderr, sep="")
             success = False
 
-    (dist_dir / "index.html").write_text(make_index(index, dist_dir), encoding="utf-8")
+    (dist_dir / "index.html").write_text(
+        make_human_index(index, dist_dir), encoding="utf-8"
+    )
+    (dist_dir / "index.json").write_text(
+        make_json_index(index, dist_dir), encoding="utf-8"
+    )
 
     if not success:
         exit(1)
