@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        可用于 hayagriva 的中文 CSL 样式
 // @namespace   Violentmonkey Scripts
-// @version     0.1.0
+// @version     0.1.1
 // @description 向 Zotero 中文社区 CSL 样式页面添加可用于 hayagriva 的 CSL 文件。
 // @author      Y.D.X.
 // @match       https://zotero-chinese.com/styles/*
@@ -46,15 +46,21 @@
       ].join(" · ");
       elements.push(p);
 
-      const details = document.createElement("details");
-      details.innerHTML = "<summary>简要更改内容</summary><ul></ul>";
-      const ul = details.querySelector("ul");
-      for (const message of entry.changes) {
-        const li = document.createElement("li");
-        li.textContent = message; // 其中内容需要转义，故不可用`innerHTML`
-        ul.appendChild(li);
+      if (entry.changes) {
+        const details = document.createElement("details");
+        details.innerHTML = "<summary>简要更改内容</summary><ul></ul>";
+        const ul = details.querySelector("ul");
+        for (const message of entry.changes) {
+          const li = document.createElement("li");
+          li.textContent = message; // 其中内容需要转义，故不可用`innerHTML`
+          ul.appendChild(li);
+        }
+        elements.push(details);
+      } else {
+        const p = document.createElement("p");
+        p.textContent = "（无需更改，直接可用）";
+        elements.push(p);
       }
-      elements.push(details);
     } else {
       const p = document.createElement("p");
       p.innerHTML = `尚不支持此样式，可<a href="${NEW_ISSUE}">联系更新</a>。`;
