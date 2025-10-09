@@ -4,6 +4,9 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 
 将 [Citation Style Language (CSL)](https://citationstyles.org) 样式处理成 [hayagriva](https://github.com/typst/hayagriva) 可用的文件。
 
+[![Check](https://github.com/typst-doc-cn/csl-sanitizer/actions/workflows/check.yaml/badge.svg)](https://github.com/typst-doc-cn/csl-sanitizer/actions/workflows/check.yaml)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Ftypst-doc-cn.github.io%2Fcsl-sanitizer%2F&label=Website)](https://typst-doc-cn.github.io/csl-sanitizer/)
+
 **语言版本：[English](./README.en.md)** | **[中文（当前文件）](./README.md)**
 
 <!-- included by main.py: start -->
