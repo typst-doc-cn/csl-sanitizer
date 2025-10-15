@@ -4,14 +4,13 @@ from collections import deque
 from collections.abc import Generator
 from difflib import HtmlDiff
 from locale import LC_COLLATE, setlocale, strxfrm
-from os import getenv
 from pathlib import Path
 from sys import argv
 
 from .csl import check_csl, read_csl, write_csl
 from .indexing import CslInfo, IndexEntry, make_human_index, make_json_index
 from .normalize import normalize_csl
-from .util import Message, ns
+from .util import Message, get_bool_env, ns
 
 ET.register_namespace("", ns["cs"])  # Required by `write_csl`
 
@@ -88,7 +87,13 @@ def main() -> None:
     dist_dir = ROOT_DIR / "dist"
     dist_dir.mkdir(exist_ok=True)
 
-    debug = bool(getenv("DEBUG"))
+    debug = get_bool_env("DEBUG")
+    csl_backtrace = get_bool_env("CSL_BACKTRACE")
+    no_check = get_bool_env("NO_CHECK")
+    assert not (csl_backtrace and no_check), (
+        "CSL_BACKTRACE and NO_CHECK cannot be enabled at the same time"
+    )
+
     files = parse_args(argv[1:], debug, styles_dir)
 
     index: deque[IndexEntry] = deque()
@@ -102,10 +107,20 @@ def main() -> None:
         # 1. Normalize
         style = read_csl(csl)
 
+        if csl_backtrace:
+            if failed := check_csl(csl):
+                print(f"💥 {failed}")
+
         changes: deque[Message] = deque()
         for message in normalize_csl(style):
             changes.append(message)
-            if debug:
+
+            if csl_backtrace:
+                print(f"📝 {message}")
+                write_csl(style, save_csl)
+                if failed := check_csl(save_csl):
+                    print(f"💥 {failed}")
+            elif debug:
                 print(message)
 
         # 2. Save
@@ -135,12 +150,17 @@ def main() -> None:
         )
 
         # 3. Check
-        failed = check_csl(save_csl)
-        if not failed:
-            print(f"✅ {csl_relative}")
-        else:
-            print(f"💥 {csl_relative}\n    {failed}")
-            success = False
+        if not no_check:
+            failed = check_csl(save_csl)
+            if not failed:
+                print(f"✅ {csl_relative}")
+            else:
+                print(f"💥 {csl_relative}\n    {failed}")
+                success = False
+            if csl_backtrace:
+                # There are many lines above in backtrace mode.
+                # It is helpful to add a blank line after each style.
+                print("")
 
     # Sort and save indices
     index_sorted = sorted(index, key=sort_by_csl_title)

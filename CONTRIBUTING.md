@@ -21,3 +21,5 @@ Removed the institution in names of a macro (container-contributors). [Discard C
 Removed the term citation-range-delimiter (-). [Discard citeproc-js extension]
 ✅ styles/chinese/src/GB-T-7714—2025（征求意见稿，顺序编码，双语）/GB-T-7714—2025（征求意见稿，顺序编码，双语）.csl
 ```
+
+You can also set `CSL_BACKTRACE=1` to check the style after each edit (and get 3× slower), or set `NO_CHECK=1` to skip all checks (and get 3× faster).
