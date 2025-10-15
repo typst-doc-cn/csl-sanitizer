@@ -9,26 +9,34 @@ from .util import Message, ns
 
 def normalize_csl(style: CslStyle) -> Generator[Message, None, None]:
     """Normalize `<style>` in a CSL in place."""
-    # For common to uncommon
+    # From parsing to validity, from common to uncommon
 
-    yield from remove_duplicate_layouts(style)
-
-    yield from replace_nonstandard_original_variables(style)
-
-    yield from remove_institution_in_names(style)
-
+    # Fix "data did not match any variant of untagged enum Term" and subsequent "unknown variant `…`, expected one of `et al`, `et-al`, `and others`, `and-others`"
     yield from remove_citation_range_delimiter_terms(style)
     yield from replace_space_et_al_terms(style)
     yield from replace_localized_et_al_terms(style)
     yield from remove_large_long_ordinal_terms(style)
 
+    # Fix "unknown variant `institution`, expected one of `name`, `et-al`, `label`, `substitute`"
+    yield from remove_institution_in_names(style)
+
+    # Fix "unknown variant ``, expected one of `lowercase`, `uppercase`, `capitalize-first`, `capitalize-all`, `sentence`, `title`"
+    yield from drop_empty_text_case_attrs(style)
+    # Fix "data did not match any variant of untagged enum TextTarget"
+    yield from fix_deprecated_term_unpublished(style)
+    # Fix "invalid locator"
+    yield from lowercase_locator_attrs(style)
+
+    # Fix "data did not match any variant of untagged enum Variable" and "data did not match any variant of untagged enum TextTarget"
+    yield from replace_nonstandard_original_variables(style)
+
+    # Fix "missing field `$value`"
     yield from drop_empty_else_branches(style)
     yield from drop_empty_groups(style)
     yield from fill_empty_layouts(style)
 
-    yield from drop_empty_text_case_attrs(style)
-    yield from fix_deprecated_term_unpublished(style)
-    yield from lowercase_locator_attrs(style)
+    # Fix "duplicate field `layout`"
+    yield from remove_duplicate_layouts(style)
 
 
 def remove_duplicate_layouts(style: CslStyle) -> Generator[Message, None, None]:
