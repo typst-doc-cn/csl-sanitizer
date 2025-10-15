@@ -29,7 +29,7 @@ jobs:
           sudo locale-gen zh_CN.UTF-8
           locale --all-locales
       - uses: actions/configure-pages@v5
-      - run: python main.py
+      - run: python -m src.csl_sanitizer
       - uses: actions/upload-artifact@v4
         with:
           path: ./dist/

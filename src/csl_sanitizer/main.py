@@ -22,6 +22,9 @@ setlocale(LC_COLLATE, "zh_CN.UTF-8")  # Required by `sort_by_csl_title`
 Message = str
 
 
+ROOT_DIR = Path(__file__).parent.parent.parent
+
+
 def normalize_csl(style: ET.Element) -> Generator[Message, None, None]:
     """Normalize `<style>` in a CSL in place."""
     # For common to uncommon
@@ -379,7 +382,7 @@ class IndexEntry:
 
 
 def make_human_index(index: Iterable[IndexEntry], dist_dir: Path) -> str:
-    readme_full = (Path(__file__).parent / "README.md").read_text(encoding="utf-8")
+    readme_full = (ROOT_DIR / "README.md").read_text(encoding="utf-8")
     readme = readme_full[
         slice(
             readme_full.find("<!-- included by main.py: start -->"),
@@ -491,10 +494,10 @@ def sort_by_csl_title(x: IndexEntry) -> tuple[int | str, ...]:
 
 
 def main() -> None:
-    styles_dir = Path("styles")
+    styles_dir = ROOT_DIR / "styles"
     assert styles_dir.exists()
 
-    dist_dir = Path("dist")
+    dist_dir = ROOT_DIR / "dist"
     dist_dir.mkdir(exist_ok=True)
 
     debug = bool(getenv("DEBUG"))
@@ -503,6 +506,8 @@ def main() -> None:
     index: deque[IndexEntry] = deque()
     success = True
     for csl in files:
+        csl_relative = csl.resolve().relative_to(styles_dir)
+
         # 1. Normalize
 
         tree = ET.parse(
@@ -518,7 +523,7 @@ def main() -> None:
 
         # 2. Save
 
-        save_csl = dist_dir / csl.relative_to(styles_dir)
+        save_csl = dist_dir / csl_relative
         save_dir = save_csl.parent
         save_dir.mkdir(exist_ok=True, parents=True)
 
@@ -550,14 +555,14 @@ def main() -> None:
         # 3. Check
 
         result = run(
-            ["hayagriva", "good.yaml", "reference", "--csl", save_csl],
+            ["hayagriva", ROOT_DIR / "good.yaml", "reference", "--csl", save_csl],
             capture_output=True,
             text=True,
         )
         if result.returncode == 0:
-            print(f"✅ {csl}")
+            print(f"✅ {csl_relative}")
         else:
-            print(f"💥 {csl}", result.stderr, sep="")
+            print(f"💥 {csl_relative}", result.stderr, sep="")
             success = False
 
     # Sort and save indices
