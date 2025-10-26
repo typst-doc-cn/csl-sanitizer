@@ -20,7 +20,7 @@ jobs:
         run: |
           set -euxo pipefail
 
-          curl -LO https://github.com/typst-community/dev-builds/releases/download/hayagriva-main.2025-09-26.799cfdc/hayagriva-x86_64-unknown-linux-musl.tar.xz
+          curl -LO https://github.com/typst-community/dev-builds/releases/download/hayagriva-v0.9.1/hayagriva-x86_64-unknown-linux-musl.tar.xz
           tar -xf hayagriva-x86_64-unknown-linux-musl.tar.xz
           mkdir -p ~/.local/bin/
           mv ./hayagriva-x86_64-unknown-linux-musl/hayagriva ~/.local/bin/
