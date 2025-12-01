@@ -31,7 +31,6 @@ def parse_args(
                 "chinese/src/化学进展/化学进展.csl",  # term `thesis-en`
                 "chinese/src/环境昆虫学报/环境昆虫学报.csl",  # term `in-en`
                 "chinese/src/四川大学-外国语学院（本科）/四川大学-外国语学院（本科）.csl",  # term `no-date`, variable `locale`
-                "chinese/src/华东理工大学-社会与公共管理学院/华东理工大学-社会与公共管理学院.csl",  # variable `nationality`
                 "chinese/src/数量经济技术经济研究/数量经济技术经济研究.csl",  # variable `container-title-zh`
                 # The nonstandard type `monograph`
                 "chinese/src/扬州大学/扬州大学.csl",
