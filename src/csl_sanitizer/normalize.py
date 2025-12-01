@@ -29,6 +29,7 @@ def normalize_csl(style: CslStyle) -> Generator[Message, None, None]:
 
     # Fix "data did not match any variant of untagged enum Variable" and "data did not match any variant of untagged enum TextTarget"
     yield from replace_nonstandard_original_variables(style)
+    yield from remove_nonstandard_variables(style)
 
     # Fix "missing field `$value`"
     yield from drop_empty_else_branches(style)
@@ -186,6 +187,22 @@ def replace_nonstandard_original_variables(
                     variables[i] = repl
                     yield f"Replaced the variable `{v}` with `{repl}` in a macro ({macro.get('name')})."
             ref.set("variable", " ".join(variables))
+
+
+def remove_nonstandard_variables(
+    style: CslStyle,
+) -> Generator[Message, None, None]:
+    """Remove non-standard variables like `nationality`.
+
+    They might be undocumented features of citeproc-js.
+    """
+    for macro in style.findall("cs:macro", ns):
+        for parent in macro.findall(".//*[@variable='nationality']/..", ns):
+            text = parent.find("./*[@variable='nationality']", ns)
+            assert text is not None
+
+            parent.remove(text)
+            yield f"Removed a reference to the variable `nationality` in a macro ({macro.get('name')}). [Discard citeproc-js extension]"
 
 
 def fix_deprecated_term_unpublished(
