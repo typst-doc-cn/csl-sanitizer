@@ -2,9 +2,21 @@
 
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Generator
+from enum import StrEnum
 
 from .csl import CslStyle
 from .util import Message, ns
+
+
+class Kind(StrEnum):
+    """Kinds of normalization."""
+
+    Follow_CSL_spec = "[Follow CSL spec]"
+    Discard_CSL_M = "[Discard CSL-M extension]"
+    Fix_CSL_M_deprecated = "[Fix CSL-M deprecated extension]"
+    Discard_citeproc_js = "[Discard citeproc-js extension]"
+    Discard_zotero_chinese = "[Discard zotero-chinese convention]"
+    Discard_unknown = "[Discard unknown extension]"
 
 
 def normalize_csl(style: CslStyle) -> Generator[Message, None, None]:
@@ -52,7 +64,7 @@ def remove_duplicate_layouts(style: CslStyle) -> Generator[Message, None, None]:
         for layout in elem.findall("cs:layout", ns):
             if (lang := layout.get("locale")) is not None:
                 elem.remove(layout)
-                yield f"Removed the localized ({lang}) layout for {tag}. [Discard CSL-M extension]"
+                yield f"Removed the localized ({lang}) layout for {tag}. {Kind.Discard_CSL_M}"
         assert len(elem.findall("cs:layout", ns)) == 1
 
 
@@ -63,6 +75,7 @@ def remove_citation_range_delimiter_terms(
 
     This is an undocumented feature of citeproc-js.
     https://github.com/zotero-chinese/styles/discussions/439
+    https://github.com/zotero-chinese/csl-m-schema-rng/blob/31461c910231fc0749044bae9780e5a69f734558/patches/csl-schema.patch#L23-L26
     """
     for locale in style.findall(
         ".//cs:term[@name='citation-range-delimiter']/../..", ns
@@ -77,9 +90,9 @@ def remove_citation_range_delimiter_terms(
         if len(terms) == 0:
             locale.remove(terms)
             # For simplicity, keep the `<locale>` even if it might become empty now.
-            yield f"Removed the term citation-range-delimiter ({term.text}) and its wrapping tag. [Discard citeproc-js extension]"
+            yield f"Removed the term citation-range-delimiter ({term.text}) and its wrapping tag. {Kind.Discard_citeproc_js}"
         else:
-            yield f"Removed the term citation-range-delimiter ({term.text}). [Discard citeproc-js extension]"
+            yield f"Removed the term citation-range-delimiter ({term.text}). {Kind.Discard_citeproc_js}"
 
 
 def remove_large_long_ordinal_terms(
@@ -100,9 +113,9 @@ def remove_large_long_ordinal_terms(
                 if len(terms) == 0:
                     locale.remove(terms)
                     # For simplicity, keep the `<locale>` even if it might become empty now.
-                    yield f"Removed the term {name} ({term.text}) and its wrapping tag."
+                    yield f"Removed the term {name} ({term.text}) and its wrapping tag. {Kind.Discard_unknown}"
                 else:
-                    yield f"Removed the term {name} ({term.text})."
+                    yield f"Removed the term {name} ({term.text}). {Kind.Discard_unknown}"
 
 
 def _replace_et_al(
@@ -117,7 +130,7 @@ def _replace_et_al(
         for et_al in style.findall(".//cs:et-al[@term]", ns):
             if (term := et_al.get("term")) in matches:
                 et_al.set("term", repl)
-                yield f"Replaced the term `{term}` referenced by `<et-al>` with `{repl}`."
+                yield f"Replaced the term `{term}` referenced by `<et-al>` with `{repl}`. {Kind.Discard_unknown}"
 
     return impl
 
@@ -152,7 +165,7 @@ def remove_institution_in_names(
             assert institution is not None
 
             names.remove(institution)
-            yield f"Removed the institution in names of a macro ({macro.get('name')}). [Discard CSL-M extension]"
+            yield f"Removed the institution in names of a macro ({macro.get('name')}). {Kind.Discard_CSL_M}"
 
 
 def replace_nonstandard_original_variables(
@@ -160,8 +173,10 @@ def replace_nonstandard_original_variables(
 ) -> Generator[Message, None, None]:
     """Replace non-standard `original-*` variables like `original-container-title` with un-original ones.
 
-    They might be undocumented features of citeproc-js.
+    They are zotero-chinese conventions.
     https://github.com/zotero-chinese/styles/pull/518
+    https://github.com/zotero-chinese/csl-m-schema-rng/blob/31461c910231fc0749044bae9780e5a69f734558/patches/csl-schema.patch#L39-L42
+    https://github.com/zotero-chinese/csl-m-schema-rng/blob/31461c910231fc0749044bae9780e5a69f734558/patches/csl-schema.patch#L53-L58
     """
     for macro in style.findall("cs:macro", ns):
         for ref in macro.findall(".//*[@variable]", ns):
@@ -173,19 +188,22 @@ def replace_nonstandard_original_variables(
             for i in range(len(variables)):
                 v = variables[i]
                 if v in [
+                    # “中文 style 仓库规定此变量以实现中英同时输出”
                     "original-container-title",
                     "original-container-title-short",
-                    "original-genre",
                     "original-event-title",
-                    "original-event-place",
+                    # “中文文献对应的英文翻译”
+                    "original-event-place",  # 会议地点
+                    "original-genre",  # 学位论文类型
+                    "original-issue",  # 增刊
+                    "original-jurisdiction",  # 专利国别
+                    "original-status",  # 出版状态（如“in press”）
+                    # Undocumented
                     "original-editor",
-                    "original-status",
-                    "original-issue",
-                    "original-jurisdiction",
                 ]:
                     repl = v.removeprefix("original-")
                     variables[i] = repl
-                    yield f"Replaced the variable `{v}` with `{repl}` in a macro ({macro.get('name')})."
+                    yield f"Replaced the variable `{v}` with `{repl}` in a macro ({macro.get('name')}). {Kind.Discard_zotero_chinese}"
             ref.set("variable", " ".join(variables))
 
 
@@ -194,7 +212,8 @@ def remove_nonstandard_variables(
 ) -> Generator[Message, None, None]:
     """Remove non-standard variables like `nationality`.
 
-    They might be undocumented features of citeproc-js.
+    This is a zotero-chinese convention.
+    https://github.com/zotero-chinese/csl-m-schema-rng/blob/31461c910231fc0749044bae9780e5a69f734558/patches/csl-schema.patch#L52
     """
     for macro in style.findall("cs:macro", ns):
         for parent in macro.findall(".//*[@variable='nationality']/..", ns):
@@ -202,7 +221,7 @@ def remove_nonstandard_variables(
             assert text is not None
 
             parent.remove(text)
-            yield f"Removed a reference to the variable `nationality` in a macro ({macro.get('name')}). [Discard citeproc-js extension]"
+            yield f"Removed a reference to the variable `nationality` in a macro ({macro.get('name')}). {Kind.Discard_zotero_chinese}"
 
 
 def fix_deprecated_term_unpublished(
@@ -218,7 +237,7 @@ def fix_deprecated_term_unpublished(
             del text.attrib["term"]
             text.set("value", "Unpublished")
 
-            yield f"Fix the deprecated term `unpublished` with the value `Unpublished` in a macro ({macro.get('name')}). [Fix CSL-M deprecated extension]"
+            yield f"Fix the deprecated term `unpublished` with the value `Unpublished` in a macro ({macro.get('name')}). {Kind.Fix_CSL_M_deprecated}"
 
 
 def drop_empty_text_case_attrs(
@@ -233,7 +252,7 @@ def drop_empty_text_case_attrs(
         for elem in macro.findall(".//*[@text-case='']", ns):
             del elem.attrib["text-case"]
 
-            yield f"Dropped the empty text-case attribute in a macro ({macro.get('name')}). [Follow CSL spec]"
+            yield f"Dropped the empty text-case attribute in a macro ({macro.get('name')}). {Kind.Follow_CSL_spec}"
 
 
 def drop_empty_else_branches(
@@ -251,7 +270,7 @@ def drop_empty_else_branches(
                 if all(child.tag is ET.Comment for child in else_branch):
                     # If it has no child or has only comments
                     choose.remove(else_branch)
-                    yield f"Dropped the empty `<else>` branch in a macro ({macro.get('name')}). [Follow CSL spec]"
+                    yield f"Dropped the empty `<else>` branch in a macro ({macro.get('name')}). {Kind.Follow_CSL_spec}"
 
 
 def drop_empty_groups(
@@ -269,7 +288,7 @@ def drop_empty_groups(
                 if all(child.tag is ET.Comment for child in group):
                     # If it has no child or has only comments
                     parent.remove(group)
-                    yield f"Dropped an empty `<group>` in a macro ({macro.get('name')}). [Follow CSL spec]"
+                    yield f"Dropped an empty `<group>` in a macro ({macro.get('name')}). {Kind.Follow_CSL_spec}"
 
 
 def fill_empty_layouts(
@@ -288,7 +307,7 @@ def fill_empty_layouts(
         for layout in elem.findall("cs:layout", ns):
             if len(layout) == 0:
                 ET.SubElement(layout, "text", {"value": ""})
-                yield f"Fill the empty `<layout>` with an empty `<text>` for {tag}. [Follow CSL spec]"
+                yield f"Fill the empty `<layout>` with an empty `<text>` for {tag}. {Kind.Follow_CSL_spec}"
 
 
 def lowercase_locator_attrs(
@@ -304,4 +323,4 @@ def lowercase_locator_attrs(
             if (locator := elem.get("locator")) and locator != locator.lower():
                 elem.set("locator", locator.lower())
 
-                yield f"Lowercased the locator attribute ({locator} -> {locator.lower()}) in a macro ({macro.get('name')}). [Follow CSL spec]"
+                yield f"Lowercased the locator attribute ({locator} -> {locator.lower()}) in a macro ({macro.get('name')}). {Kind.Follow_CSL_spec}"
