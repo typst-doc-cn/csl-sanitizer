@@ -1,7 +1,7 @@
 """CSL normalization routines."""
 
 import xml.etree.ElementTree as ET
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from enum import StrEnum
 
 from .csl import CslStyle
@@ -25,8 +25,6 @@ def normalize_csl(style: CslStyle) -> Generator[Message, None, None]:
 
     # Fix "data did not match any variant of untagged enum Term" and subsequent "unknown variant `…`, expected one of `et al`, `et-al`, `and others`, `and-others`"
     yield from remove_citation_range_delimiter_terms(style)
-    yield from replace_space_et_al_terms(style)
-    yield from replace_localized_et_al_terms(style)
     yield from remove_large_long_ordinal_terms(style)
 
     # Fix "unknown variant `institution`, expected one of `name`, `et-al`, `label`, `substitute`"
@@ -118,39 +116,6 @@ def remove_large_long_ordinal_terms(
                     yield f"Removed the term {name} ({term.text}). {Kind.Discard_unknown}"
 
 
-def _replace_et_al(
-    matches: list[str], repl: str
-) -> Callable[[CslStyle], Generator[Message, None, None]]:
-    def impl(style: CslStyle) -> Generator[Message, None, None]:
-        for term in style.findall(".//cs:term[@name]", ns):
-            if (name := term.get("name")) in matches:
-                term.set("name", repl)
-                yield f"Replaced the term name `{name}` with `{repl}` ({term.text})."
-
-        for et_al in style.findall(".//cs:et-al[@term]", ns):
-            if (term := et_al.get("term")) in matches:
-                et_al.set("term", repl)
-                yield f"Replaced the term `{term}` referenced by `<et-al>` with `{repl}`. {Kind.Discard_unknown}"
-
-    return impl
-
-
-replace_space_et_al_terms = _replace_et_al(["space-et-al"], "et-al")
-"""Replace the term `space-et-al` with `et-al`.
-
-This might be undocumented features of citeproc-js.
-"""
-
-replace_localized_et_al_terms = _replace_et_al(
-    ["en-et-al", "zh-et-al", "et-al-zh"], "et-al"
-)
-"""Replace the localized term `{en,zh}-et-al`/`et-al-zh` with `et-al`.
-
-This might be undocumented features of citeproc-js.
-https://github.com/zotero-chinese/styles/pull/518
-"""
-
-
 def remove_institution_in_names(
     style: CslStyle,
 ) -> Generator[Message, None, None]:
@@ -198,8 +163,6 @@ def replace_nonstandard_original_variables(
                     "original-issue",  # 增刊
                     "original-jurisdiction",  # 专利国别
                     "original-status",  # 出版状态（如“in press”）
-                    # Undocumented
-                    "original-editor",
                 ]:
                     repl = v.removeprefix("original-")
                     variables[i] = repl
