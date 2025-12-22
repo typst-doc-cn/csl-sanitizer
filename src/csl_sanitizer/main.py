@@ -27,18 +27,8 @@ def parse_args(
         skipped = {
             styles_dir / x
             for x in {
-                # Self-invented terms and variables—They should be implemented as macros
-                "chinese/src/化学进展/化学进展.csl",  # term `thesis-en`
-                "chinese/src/环境昆虫学报/环境昆虫学报.csl",  # term `in-en`
-                "chinese/src/四川大学-外国语学院（本科）/四川大学-外国语学院（本科）.csl",  # term `no-date`, variable `locale`
-                "chinese/src/数量经济技术经济研究/数量经济技术经济研究.csl",  # variable `container-title-zh`
-                # The nonstandard type `monograph`
-                "chinese/src/扬州大学/扬州大学.csl",
-                "chinese/src/贵州大学/贵州大学.csl",
-                "chinese/src/山东农业大学/山东农业大学.csl",
-                # Other situations
-                "chinese/src/人民出版社学术著作引证注释格式（修正版）/人民出版社学术著作引证注释格式（修正版） .csl",  # `<name name-as-sort-order="last">`
-                "chinese/src/国际政治研究/国际政治研究.csl",  # `<date>` in `<terms>`
+                # This is a set of styles that are either unfixable (e.g., using self-invented terms rather than using macros) or not worth fixing (e.g., using a feature that is not used by any other style).
+                # At present, the set is empty.
             }
         }
         for f in styles_dir.glob("**/*.csl"):
@@ -51,6 +41,7 @@ def parse_args(
             yield from (
                 styles_dir / x
                 for x in [
+                    # This is a list of typical styles.
                     "chinese/src/历史研究/历史研究.csl",
                     "chinese/src/中国政法大学/中国政法大学.csl",
                     "chinese/src/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）/GB-T-7714—2015（顺序编码，双语，姓名不大写，无URL、DOI）.csl",

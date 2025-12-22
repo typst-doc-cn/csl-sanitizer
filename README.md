@@ -21,7 +21,7 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 
 ## 初心
 
-由于实现方式纷繁复杂，**许多 CSL 样式超出了 [CSL 规范](https://docs.citationstyles.org/en/stable/specification.html)**，有些甚至还超出了 [CSL-M 扩展](https://citeproc-js.readthedocs.io/en/latest/csl-m/)。在 300+ [中文 CSL 样式](https://zotero-chinese.com/styles/)中，约 74% 会被 hayagriva（[Typst](https://typst.app/home) 所用实现）判为 malformed，但它们都能被 [citeproc-js](https://citeproc-js.readthedocs.io/en/latest/)（[Zotero](https://www.zotero.org/) 所用实现）接受。
+由于实现方式纷繁复杂，**许多 CSL 样式超出了 [CSL 规范](https://docs.citationstyles.org/en/stable/specification.html)**，有些甚至还超出了 [CSL-M 扩展](https://citeproc-js.readthedocs.io/en/latest/csl-m/)（因为 [Zotero 允许任意扩展 CSL 变量](https://github.com/zotero-chinese/styles/discussions/598#discussioncomment-15125308)）。在 300+ [中文 CSL 样式](https://zotero-chinese.com/styles/)中，约 74% 会被 hayagriva（[Typst](https://typst.app/home) 所用实现）判为 malformed，但它们都能被 [citeproc-js](https://citeproc-js.readthedocs.io/en/latest/)（[Zotero](https://www.zotero.org/) 所用实现）接受。
 
 然而很不幸，**[hayagriva 提供的错误信息一般并不清晰](https://github.com/typst/hayagriva/issues/405)**，导致调试异常困难。即使您[理解 hayagriva 报了什么错](https://typst-doc-cn.github.io/guide/FAQ/bib-csl.html)，通常也需删除各个`<macro>`并反复重新编译，一番二分法后，才能定位问题。
 
