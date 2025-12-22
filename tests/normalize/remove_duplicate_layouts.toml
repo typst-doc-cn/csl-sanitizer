@@ -1,0 +1,51 @@
+input_error = 'CSL file malformed: Custom("duplicate field `layout`")'
+
+normalizations = [
+  'Removed the localized (en) layout for bibliography. [Discard CSL-M extension]',
+]
+
+# Adapted from https://github.com/zotero-chinese/styles/blob/c0b870b/src/GB-T-7714—2025（征求意见稿，顺序编码，双语）/GB-T-7714—2025（征求意见稿，顺序编码，双语）.csl
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <citation collapse="citation-number" after-collapse-delimiter=",">
+    <sort>
+      <key variable="citation-number"/>
+    </sort>
+    <layout vertical-align="sup" delimiter="," prefix="[" suffix="]">
+      <text variable="citation-number"/>
+    </layout>
+  </citation>
+  <bibliography entry-spacing="0" et-al-min="4" et-al-use-first="3" second-field-align="flush">
+    <layout locale="en">
+      <text variable="citation-number" prefix="[" suffix="]"/>
+      <text macro="entry-layout" suffix="."/>
+    </layout>
+    <layout>
+      <text variable="citation-number" prefix="[" suffix="]"/>
+      <text macro="entry-layout" suffix="."/>
+    </layout>
+  </bibliography>
+</style>'''
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -13,10 +13,6 @@
+
+     </layout>
+   </citation>
+   <bibliography entry-spacing="0" et-al-min="4" et-al-use-first="3" second-field-align="flush">
+-    <layout locale="en">
+-      <text variable="citation-number" prefix="[" suffix="]"/>
+-      <text macro="entry-layout" suffix="."/>
+-    </layout>
+     <layout>
+       <text variable="citation-number" prefix="[" suffix="]"/>
+       <text macro="entry-layout" suffix="."/>'''

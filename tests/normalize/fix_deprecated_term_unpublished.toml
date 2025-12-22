@@ -1,0 +1,44 @@
+input_error = 'CSL file malformed: Custom("data did not match any variant of untagged enum TextTarget")'
+
+normalizations = [
+  'Fix the deprecated term `unpublished` with the value `Unpublished` in a macro (thesis-genre-en). [Fix CSL-M deprecated extension]',
+]
+
+# Adapted from https://github.com/zotero-chinese/styles/blob/99e5ca15/src/国际新闻界/国际新闻界.csl
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <macro name="thesis-genre-en">
+    <text term="unpublished" text-case="capitalize-first"/>
+  </macro>
+  <citation>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </bibliography>
+</style>'''
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -5,7 +5,7 @@
+
+     <title/>
+   </info>
+   <macro name="thesis-genre-en">
+-    <text term="unpublished" text-case="capitalize-first"/>
++    <text text-case="capitalize-first" value="Unpublished"/>
+   </macro>
+   <citation>
+     <layout>'''

@@ -1,0 +1,55 @@
+input_error = 'CSL file malformed: Custom("invalid locator")'
+
+normalizations = [
+  'Lowercased the locator attribute (Chapter → chapter) in a macro (citation-locator-en). [Follow CSL spec]',
+]
+
+# Adapted from https://github.com/zotero-chinese/styles/blob/c0b870b/src/北京师范大学/北京师范大学.csl
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <macro name="citation-locator-en">
+    <group delimiter=" ">
+      <choose>
+        <if locator="Chapter">
+          <label variable="locator" text-case="capitalize-first"/>
+        </if>
+        <else>
+          <label variable="locator" form="short"/>
+        </else>
+      </choose>
+      <text variable="locator"/>
+    </group>
+  </macro>
+  <citation>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </bibliography>
+</style>'''
+
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -7,7 +7,7 @@
+
+   <macro name="citation-locator-en">
+     <group delimiter=" ">
+       <choose>
+-        <if locator="Chapter">
++        <if locator="chapter">
+           <label variable="locator" text-case="capitalize-first"/>
+         </if>
+         <else>'''

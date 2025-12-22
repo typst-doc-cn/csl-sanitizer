@@ -286,4 +286,4 @@ def lowercase_locator_attrs(
             if (locator := elem.get("locator")) and locator != locator.lower():
                 elem.set("locator", locator.lower())
 
-                yield f"Lowercased the locator attribute ({locator} -> {locator.lower()}) in a macro ({macro.get('name')}). {Kind.Follow_CSL_spec}"
+                yield f"Lowercased the locator attribute ({locator} → {locator.lower()}) in a macro ({macro.get('name')}). {Kind.Follow_CSL_spec}"

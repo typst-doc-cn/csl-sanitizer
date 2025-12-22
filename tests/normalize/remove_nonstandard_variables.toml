@@ -1,0 +1,46 @@
+input_error = 'CSL file malformed: Custom("data did not match any variant of untagged enum TextTarget")'
+
+normalizations = [
+  'Removed a reference to the variable `nationality` in a macro (author-zh). [Discard zotero-chinese convention]',
+]
+
+# Adapted from https://github.com/zotero-chinese/styles/blob/c0b870b/src/教育史研究/教育史研究.csl
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <macro name="author-zh">
+    <text variable="nationality" prefix="［" suffix="］"/>
+  </macro>
+  <citation>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </bibliography>
+</style>'''
+
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -5,8 +5,7 @@
+
+     <title/>
+   </info>
+   <macro name="author-zh">
+-    <text variable="nationality" prefix="［" suffix="］"/>
+-  </macro>
++    </macro>
+   <citation>
+     <layout>
+       <text value="irrelevant"/>'''

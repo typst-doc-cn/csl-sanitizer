@@ -1,0 +1,203 @@
+input_error = 'CSL file malformed: Custom("data did not match any variant of untagged enum Variable")'
+
+normalizations = [
+  'Replaced the variable `original-genre` with `genre` in a macro (title-ZHtoEN). [Discard zotero-chinese convention]',
+  'Replaced the variable `original-genre` with `genre` in a macro (title-ZHtoEN). [Discard zotero-chinese convention]',
+  'Replaced the variable `original-container-title-short` with `container-title-short` in a macro (container-ZHtoEN). [Discard zotero-chinese convention]',
+  'Replaced the variable `original-container-title-short` with `container-title-short` in a macro (container-ZHtoEN). [Discard zotero-chinese convention]',
+  'Replaced the variable `original-container-title` with `container-title` in a macro (container-ZHtoEN). [Discard zotero-chinese convention]',
+  'Replaced the variable `original-event-title` with `event-title` in a macro (container-ZHtoEN). [Discard zotero-chinese convention]',
+  'Replaced the variable `original-event-title` with `event-title` in a macro (container-ZHtoEN). [Discard zotero-chinese convention]',
+  'Replaced the variable `original-container-title` with `container-title` in a macro (container-ZHtoEN). [Discard zotero-chinese convention]',
+  'Replaced the variable `original-event-place` with `event-place` in a macro (container-ZHtoEN). [Discard zotero-chinese convention]',
+  'Replaced the variable `original-container-title` with `container-title` in a macro (container-ZHtoEN). [Discard zotero-chinese convention]',
+  'Replaced the variable `original-container-title` with `container-title` in a macro (container-ZHtoEN). [Discard zotero-chinese convention]',
+]
+
+# Adapted from https://github.com/zotero-chinese/styles/blob/41e4789/src/物理学报（双语）/物理学报（双语）.csl
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <macro name="author-ZHtoEN">
+    <names variable="original-author">
+      <name delimiter=", "/>
+    </names>
+  </macro>
+  <macro name="title-ZHtoEN">
+    <group delimiter=" ">
+      <choose>
+        <if type="bill book figure graphic legal_case legislation map motion_picture report song standard treaty" match="any">
+          <text variable="original-title" font-style="italic"/>
+          <choose>
+            <if type="report standard" match="any">
+              <label variable="number" form="short" text-case="capitalize-first"/>
+              <number variable="number"/>
+            </if>
+          </choose>
+        </if>
+        <else-if type="thesis">
+          <!-- 《参考文献引用须知》的学位格式有论文题目，但是示例中没有 -->
+          <choose>
+            <if variable="original-genre">
+              <text variable="original-genre" text-case="title" font-style="italic"/>
+            </if>
+            <else>
+              <text value="Ph.D Dissertation" font-style="italic"/>
+            </else>
+          </choose>
+        </else-if>
+      </choose>
+    </group>
+  </macro>
+  <macro name="container-ZHtoEN">
+    <group delimiter=" ">
+      <choose>
+        <if type="article-journal article-magazine article-newspaper" match="any">
+          <choose>
+            <if variable="original-container-title-short">
+              <text variable="original-container-title-short" text-case="title" font-style="italic"/>
+            </if>
+            <else>
+              <text variable="original-container-title" text-case="title" font-style="italic"/>
+            </else>
+          </choose>
+          <text variable="volume" font-weight="bold"/>
+        </if>
+        <else-if type="paper-conference">
+          <choose>
+            <if variable="original-event-title">
+              <text variable="original-event-title" text-case="title" font-style="italic"/>
+            </if>
+            <else>
+              <text variable="original-container-title" text-case="title" font-style="italic"/>
+            </else>
+          </choose>
+          <group delimiter=", ">
+            <text variable="original-event-place"/>
+          </group>
+        </else-if>
+        <else-if type="broadcast chapter entry entry-dictionary entry-encyclopedia paper-conference" match="any">
+          <choose>
+            <if variable="original-container-title">
+              <group delimiter=", ">
+                <text variable="original-container-title" text-case="title" font-style="italic"/>
+              </group>
+            </if>
+          </choose>
+        </else-if>
+      </choose>
+    </group>
+  </macro>
+  <macro name="publisher-ZHtoEN">
+    <choose>
+      <if type="paper-conference">
+        <choose>
+          <if variable="event-place event-date" match="none">
+            <group prefix="(" suffix=")" delimiter=": ">
+              <text variable="original-publisher-place" text-case="title"/>
+              <text variable="original-publisher"/>
+            </group>
+          </if>
+        </choose>
+      </if>
+      <else-if type="patent">
+        <group delimiter=" ">
+          <group delimiter=" " font-style="italic">
+            <choose>
+              <if variable="jurisdiction">
+                <text variable="jurisdiction"/>
+              </if>
+              <else>
+                <text variable="original-publisher-place"/>
+              </else>
+            </choose>
+            <text term="patent" text-case="capitalize-first"/>
+          </group>
+          <text variable="number"/>
+        </group>
+      </else-if>
+      <else-if type="article article-journal article-magazine article-newspaper" match="none">
+        <group prefix="(" suffix=")" delimiter=": ">
+          <text variable="original-publisher-place" text-case="title"/>
+          <text variable="original-publisher"/>
+        </group>
+      </else-if>
+    </choose>
+  </macro>
+  <citation>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </bibliography>
+</style>'''
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -24,8 +24,8 @@
+
+         <else-if type="thesis">
+           <!-- 《参考文献引用须知》的学位格式有论文题目，但是示例中没有 -->
+           <choose>
+-            <if variable="original-genre">
+-              <text variable="original-genre" text-case="title" font-style="italic"/>
++            <if variable="genre">
++              <text variable="genre" text-case="title" font-style="italic"/>
+             </if>
+             <else>
+               <text value="Ph.D Dissertation" font-style="italic"/>
+@@ -40,33 +40,33 @@
+
+       <choose>
+         <if type="article-journal article-magazine article-newspaper" match="any">
+           <choose>
+-            <if variable="original-container-title-short">
+-              <text variable="original-container-title-short" text-case="title" font-style="italic"/>
++            <if variable="container-title-short">
++              <text variable="container-title-short" text-case="title" font-style="italic"/>
+             </if>
+             <else>
+-              <text variable="original-container-title" text-case="title" font-style="italic"/>
++              <text variable="container-title" text-case="title" font-style="italic"/>
+             </else>
+           </choose>
+           <text variable="volume" font-weight="bold"/>
+         </if>
+         <else-if type="paper-conference">
+           <choose>
+-            <if variable="original-event-title">
+-              <text variable="original-event-title" text-case="title" font-style="italic"/>
++            <if variable="event-title">
++              <text variable="event-title" text-case="title" font-style="italic"/>
+             </if>
+             <else>
+-              <text variable="original-container-title" text-case="title" font-style="italic"/>
++              <text variable="container-title" text-case="title" font-style="italic"/>
+             </else>
+           </choose>
+           <group delimiter=", ">
+-            <text variable="original-event-place"/>
++            <text variable="event-place"/>
+           </group>
+         </else-if>
+         <else-if type="broadcast chapter entry entry-dictionary entry-encyclopedia paper-conference" match="any">
+           <choose>
+-            <if variable="original-container-title">
++            <if variable="container-title">
+               <group delimiter=", ">
+-                <text variable="original-container-title" text-case="title" font-style="italic"/>
++                <text variable="container-title" text-case="title" font-style="italic"/>
+               </group>
+             </if>
+           </choose>'''
