@@ -1,0 +1,51 @@
+input_error = 'CSL file malformed: Custom("data did not match any variant of untagged enum Term")'
+
+normalizations = [
+  'Removed the term long-ordinal-11 (十一). [Discard unknown extension]',
+  'Removed the term long-ordinal-12 (十二). [Discard unknown extension]',
+]
+
+# Adapted from https://github.com/zotero-chinese/styles/blob/99e5ca15/src/中国人民大学/中国人民大学.csl
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <locale xml:lang="zh">
+    <terms>
+      <term name="long-ordinal-10">十</term>
+      <term name="long-ordinal-11">十一</term>
+      <term name="long-ordinal-12">十二</term>
+    </terms>
+  </locale>
+  <citation>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </bibliography>
+</style>'''
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -7,9 +7,7 @@
+
+   <locale xml:lang="zh">
+     <terms>
+       <term name="long-ordinal-10">十</term>
+-      <term name="long-ordinal-11">十一</term>
+-      <term name="long-ordinal-12">十二</term>
+-    </terms>
++      </terms>
+   </locale>
+   <citation>
+     <layout>'''

@@ -1,0 +1,55 @@
+
+input_error = 'CSL file malformed: Custom("missing field `$value`")'
+
+normalizations = [
+  'Dropped an empty `<group>` in a macro (title). [Follow CSL spec]',
+]
+
+# Adapted from https://github.com/zotero-chinese/styles/blob/ce0786d782f6c/src/岩石学报/岩石学报.csl
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <macro name="title">
+    <group delimiter=": ">
+      <text variable="title"/>
+    </group>
+    <group delimiter="/" prefix="[" suffix="]">
+      <!-- <text macro="type-id"/> -->
+      <!-- <text macro="medium-id"/> -->
+    </group>
+  </macro>
+  <citation>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </bibliography>
+</style>'''
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -8,11 +8,7 @@
+
+     <group delimiter=": ">
+       <text variable="title"/>
+     </group>
+-    <group delimiter="/" prefix="[" suffix="]">
+-      <!-- <text macro="type-id"/> -->
+-      <!-- <text macro="medium-id"/> -->
+-    </group>
+-  </macro>
++    </macro>
+   <citation>
+     <layout>
+       <text value="irrelevant"/>'''

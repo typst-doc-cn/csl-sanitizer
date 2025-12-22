@@ -1,0 +1,47 @@
+input_error = 'CSL file malformed: Custom("missing field `$value`")'
+
+normalizations = [
+  'Fill the empty `<layout>` with an empty `<text>` for citation. [Follow CSL spec]',
+]
+
+# Adapted from https://github.com/zotero-chinese/styles/blob/c0b870b/src/导出刊名/导出刊名.csl
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <!-- 参考文献表格式 -->
+  <macro name="entry-layout">
+    <choose>
+      <if variable="container-title">
+        <text variable="container-title"/>
+      </if>
+    </choose>
+  </macro>
+  <citation>
+    <layout/>
+  </citation>
+  <bibliography>
+    <layout>
+      <text macro="entry-layout"/>
+    </layout>
+  </bibliography>
+</style>'''
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -13,7 +13,7 @@
+
+     </choose>
+   </macro>
+   <citation>
+-    <layout/>
++    <layout><text value=""/></layout>
+   </citation>
+   <bibliography>
+     <layout>'''

@@ -8,7 +8,7 @@ on:
   merge_group:
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -28,7 +28,14 @@ jobs:
         run: |
           sudo locale-gen zh_CN.UTF-8
           locale --all-locales
-      - run: python -m src.csl_sanitizer
+
+      - name: Run tests
+        shell: bash
+        run: |
+          PYTHONPATH="$PYTHONPATH:./src/" python tests/run_tests.py
+
+      - name: Build CSL styles
+        run: python -m src.csl_sanitizer
       - uses: actions/upload-artifact@v4
         with:
           path: ./dist/

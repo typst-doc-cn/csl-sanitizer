@@ -1,0 +1,59 @@
+input_error = 'CSL file malformed: Custom("unknown variant `institution`, expected one of `name`, `et-al`, `label`, `substitute`")'
+
+normalizations = [
+  'Removed the institution in names of a macro (author-en). [Discard CSL-M extension]',
+]
+
+# Adapted from https://github.com/zotero-chinese/styles/blob/99e5ca15/src/GB-T-7714—2015（注释，双语，全角标点）/GB-T-7714—2015（注释，双语，全角标点）.csl
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <!-- 主要责任者 -->
+  <macro name="author-en">
+    <names variable="author">
+      <name>
+        <name-part name="family" text-case="uppercase"/>
+      </name>
+      <institution/>
+      <substitute>
+        <names variable="composer"/>
+        <names variable="illustrator"/>
+        <names variable="director"/>
+        <choose>
+          <if variable="container-title" match="none">
+            <names variable="editor"/>
+          </if>
+        </choose>
+      </substitute>
+    </names>
+  </macro>
+  <citation>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </bibliography>
+</style>'''
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -10,7 +10,6 @@
+
+       <name>
+         <name-part name="family" text-case="uppercase"/>
+       </name>
+-      <institution/>
+       <substitute>
+         <names variable="composer"/>
+         <names variable="illustrator"/>'''

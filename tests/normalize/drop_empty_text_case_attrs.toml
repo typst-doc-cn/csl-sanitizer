@@ -1,0 +1,53 @@
+input_error = 'CSL file malformed: Custom("unknown variant ``, expected one of `lowercase`, `uppercase`, `capitalize-first`, `capitalize-all`, `sentence`, `title`")'
+
+normalizations = [
+  'Dropped the empty text-case attribute in a macro (author-translation). [Follow CSL spec]',
+]
+
+# Adapted from https://github.com/zotero-chinese/styles/blob/99e5ca15/src/植物科学学报/植物科学学报.csl
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <!-- 翻译的主要责任者（暂只支持人名） -->
+  <macro name="author-translation">
+    <choose>
+      <if variable="original-author">
+        <names variable="original-author">
+          <name et-al-min="6" et-al-use-first="5" initialize="false" sort-separator=",  ">
+            <name-part name="family" text-case=""/>
+          </name>
+        </names>
+      </if>
+    </choose>
+  </macro>
+  <citation>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </bibliography>
+</style>'''
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -10,7 +10,7 @@
+
+       <if variable="original-author">
+         <names variable="original-author">
+           <name et-al-min="6" et-al-use-first="5" initialize="false" sort-separator=",  ">
+-            <name-part name="family" text-case=""/>
++            <name-part name="family"/>
+           </name>
+         </names>
+       </if>'''

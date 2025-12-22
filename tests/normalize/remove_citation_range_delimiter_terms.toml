@@ -1,0 +1,45 @@
+input_error = 'CSL file malformed: Custom("data did not match any variant of untagged enum Term")'
+
+normalizations = [
+  'Removed the term citation-range-delimiter (-). [Discard citeproc-js extension]',
+]
+
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="note" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <locale>
+    <terms>
+      <term name="citation-range-delimiter">-</term>
+      <term name="page-range-delimiter">-</term>
+    </terms>
+  </locale>
+  <citation>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </bibliography>
+</style>'''
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -6,7 +6,6 @@
+
+   </info>
+   <locale>
+     <terms>
+-      <term name="citation-range-delimiter">-</term>
+       <term name="page-range-delimiter">-</term>
+     </terms>
+   </locale>'''
