@@ -13,7 +13,7 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 - Replace non-standard syntaxes with equivalent or approximate ones
 - Keep the change minimal and understandable
 
-The targeted hayagriva version: [2025-09-27 `v0.9.1`](https://github.com/typst/hayagriva/releases/tag/v0.9.1) ([download](https://github.com/typst-community/dev-builds/releases/tag/hayagriva-v0.9.1)), shipped with typst v0.14.0.
+The targeted hayagriva version: [2025-09-27 `v0.9.1`](https://github.com/typst/hayagriva/releases/tag/v0.9.1) ([download](https://github.com/typst-community/dev-builds/releases/tag/hayagriva-v0.9.1)), shipped with typst v0.14.0+.
 
 Usage: [Go to the CSL file list](https://typst-doc-cn.github.io/csl-sanitizer/#style-list), or [install the browser user script](https://typst-doc-cn.github.io/csl-sanitizer/main.user.js) and view at [Zotero Chinese community’s CSL styles page](https://zotero-chinese.com/styles/).
 
@@ -31,4 +31,4 @@ It's likely that you will have to comment out `<macro>`s and recompile bisection
 
 This project attempts to help you with these heavy work, **letting CSL styles be accepted by hayagriva**.
 
-However, please note that this does not mean the bibliography format will be strictly correct — [Typst still has a considerable gap in Chinese support. Please combine this with other workarounds when necessary.](https://typst-doc-cn.github.io/clreq/#x7-bibliography)
+However, please note that this does not mean the bibliography format will be strictly correct. Details on that can be found in [Hayagriva’s support for GB/T 7714—2015](https://ydx-2147483647.github.io/hayagriva-gb-tracking/) (not available in English at present). In general, [Typst still has a considerable gap in Chinese support. Please combine this with other workarounds when necessary.](https://typst-doc-cn.github.io/clreq/#x7-bibliography)

@@ -15,7 +15,7 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 - 替换非标准语法为等价或近似内容
 - 尽量避免多余更改以保持清晰易懂
 
-针对的 hayagriva 版本：[2025-09-27 `v0.9.1`](https://github.com/typst/hayagriva/releases/tag/v0.9.1)（[下载](https://github.com/typst-community/dev-builds/releases/tag/hayagriva-v0.9.1)），对应 typst v0.14.0。
+针对的 hayagriva 版本：[2025-09-27 `v0.9.1`](https://github.com/typst/hayagriva/releases/tag/v0.9.1)（[下载](https://github.com/typst-community/dev-builds/releases/tag/hayagriva-v0.9.1)），对应 typst v0.14.0+。
 
 使用方法：[查看 CSL 文件列表](https://typst-doc-cn.github.io/csl-sanitizer/#style-list)，或[安装浏览器用户脚本](https://typst-doc-cn.github.io/csl-sanitizer/main.user.js)在 [Zotero 中文社区 CSL 样式页面](https://zotero-chinese.com/styles/)搜索查看。
 
@@ -31,6 +31,6 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 
 本项目希望能免除这些繁重工作，**让 CSL 样式能被 hayagriva 接受**。
 
-不过请注意，这并不保证能完全正确地著录参考文献——[Typst 在中文支持方面还有不小差距，必要时请结合其它方案使用。](https://typst-doc-cn.github.io/clreq/#x7-bibliography)
+不过请注意，这并不保证能完全正确地著录参考文献，具体可参考 [Hayagriva 对 GB/T 7714—2015 的支持情况](https://ydx-2147483647.github.io/hayagriva-gb-tracking/)。总之，[Typst 在中文支持方面还有不小差距，必要时请结合其它方案使用](https://typst-doc-cn.github.io/clreq/#x7-bibliography)。
 
 <!-- included by main.py: end -->
