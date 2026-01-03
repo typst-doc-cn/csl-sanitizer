@@ -175,8 +175,12 @@ def remove_nonstandard_variables(
 ) -> Generator[Message, None, None]:
     """Remove non-standard variables like `nationality`.
 
-    This is a zotero-chinese convention.
-    https://github.com/zotero-chinese/csl-m-schema-rng/blob/31461c910231fc0749044bae9780e5a69f734558/patches/csl-schema.patch#L52
+    They are zotero-chinese conventions.
+    - `nationality`
+      https://github.com/zotero-chinese/csl-m-schema-rng/blob/31461c910231fc0749044bae9780e5a69f734558/patches/csl-schema.patch#L52
+    - `CSTR`
+      https://github.com/zotero-chinese/csl-m-schema-rng/blob/4e791b375fd39bc5fea42b0e108c4458c53642d3/patches/csl-schema.patch#L50
+      [GB/T 32843—2016《科技资源标识》](https://std.samr.gov.cn/gb/search/gbDetailed?id=71F772D81092D3A7E05397BE0A0AB82A)
     """
     for macro in style.findall("cs:macro", ns):
         for parent in macro.findall(".//*[@variable='nationality']/..", ns):
@@ -185,6 +189,35 @@ def remove_nonstandard_variables(
 
             parent.remove(text)
             yield f"Removed a reference to the variable `nationality` in a macro ({macro.get('name')}). {Kind.Discard_zotero_chinese}"
+
+        for branch in macro.findall(".//cs:else-if[@variable='CSTR DOI URL']", ns):
+            branch.set("variable", "DOI URL")
+            yield f"Removed a reference to the variable `CSTR` in a macro ({macro.get('name')}). {Kind.Discard_zotero_chinese}"
+
+        for group in macro.findall(".//cs:if[@variable='CSTR']/../..", ns):
+            choose = group.find("./cs:choose/cs:if[@variable='CSTR']/..", ns)
+            assert choose is not None
+
+            not_implemented = NotImplementedError(
+                f"Cannot handle complex `<choose>` structures in the macro {macro.get('name')} yet."
+            )
+
+            match len(choose):
+                case 2:
+                    # For `<choose>` with only `<if>` and `<else>`, move the `<else>` branch up.
+                    else_branch = choose.find("cs:else", ns)
+                    assert else_branch is not None
+                    assert len(else_branch) > 0
+
+                    if len(else_branch) > 1:
+                        raise not_implemented
+
+                    index = list(group).index(choose)
+                    group.remove(choose)
+                    group.insert(index, else_branch[0])
+                    yield f"Removed a reference to the variable `CSTR` and its wrapping tags in a macro ({macro.get('name')}). {Kind.Discard_zotero_chinese}"
+                case _:
+                    raise not_implemented
 
 
 def fix_deprecated_term_unpublished(

@@ -1,0 +1,90 @@
+input_error = 'CSL file malformed: Custom("data did not match any variant of untagged enum Variable")'
+
+normalizations = [
+  'Removed a reference to the variable `CSTR` in a macro (entry-type-id). [Discard zotero-chinese convention]',
+  'Removed a reference to the variable `CSTR` and its wrapping tags in a macro (access). [Discard zotero-chinese convention]',
+]
+
+# Adapted from https://github.com/zotero-chinese/styles/blob/0e0ad91/src/GB-T-7714—2025（顺序编码，双语）/GB-T-7714—2025（顺序编码，双语）.csl
+input_csl = '''
+<?xml version='1.0' encoding='utf-8'?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info>
+    <id/>
+    <title/>
+  </info>
+  <!-- 文献类型标识 -->
+  <macro name="entry-type-id">
+    <choose>
+      <if type="article">
+        <!-- 预印本 -->
+        <text value="PP"/>
+      </if>
+      <else-if variable="CSTR DOI URL" match="any">
+        <text value="EB"/>
+      </else-if>
+      <else>
+        <text value="Z"/>
+      </else>
+    </choose>
+  </macro>
+  <!-- 7.8 获取和访问路径 7.9 永久标识符 -->
+  <macro name="access">
+    <group delimiter=". ">
+      <text variable="URL"/>
+      <choose>
+        <if variable="CSTR"> <!-- 扩展：CSTR -->
+          <text variable="CSTR" prefix="CSTR:"/>
+        </if>
+        <else>
+          <text variable="DOI" prefix="DOI:"/>
+        </else>
+      </choose>
+    </group>
+  </macro>
+  <citation>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <layout>
+      <text value="irrelevant"/>
+    </layout>
+  </bibliography>
+</style>'''
+
+diff = '''
+--- Original
+
++++ Sanitized
+
+@@ -11,7 +11,7 @@
+
+         <!-- 预印本 -->
+         <text value="PP"/>
+       </if>
+-      <else-if variable="CSTR DOI URL" match="any">
++      <else-if variable="DOI URL" match="any">
+         <text value="EB"/>
+       </else-if>
+       <else>
+@@ -23,15 +23,8 @@
+
+   <macro name="access">
+     <group delimiter=". ">
+       <text variable="URL"/>
+-      <choose>
+-        <if variable="CSTR"> <!-- 扩展：CSTR -->
+-          <text variable="CSTR" prefix="CSTR:"/>
+-        </if>
+-        <else>
+-          <text variable="DOI" prefix="DOI:"/>
+-        </else>
+-      </choose>
+-    </group>
++      <text variable="DOI" prefix="DOI:"/>
++        </group>
+   </macro>
+   <citation>
+     <layout>'''
