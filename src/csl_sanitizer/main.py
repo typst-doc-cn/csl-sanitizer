@@ -98,7 +98,7 @@ def main() -> None:
         style = read_csl(csl)
 
         if csl_backtrace:
-            if failed := check_csl(csl):
+            if failed := check_csl(style):
                 print(f"💥 {failed}")
 
         changes: deque[Message] = deque()
@@ -107,13 +107,25 @@ def main() -> None:
 
             if csl_backtrace:
                 print(f"📝 {message}")
-                write_csl(style, save_csl)
-                if failed := check_csl(save_csl):
+                if failed := check_csl(style):
                     print(f"💥 {failed}")
             elif debug:
                 print(message)
 
-        # 2. Save
+        # 2. Check
+        if not no_check:
+            failed = check_csl(style)
+            if not failed:
+                print(f"✅ {csl_relative.as_posix()}")
+            else:
+                print(f"💥 {csl_relative.as_posix()}\n    {failed}")
+                success = False
+            if csl_backtrace:
+                # There are many lines above in backtrace mode.
+                # It is helpful to add a blank line after each style.
+                print("")
+
+        # 3. Save
 
         # Save sanitized CSL
         write_csl(style, save_csl)
@@ -138,19 +150,6 @@ def main() -> None:
                 diff=save_dir / "diff.html",
             )
         )
-
-        # 3. Check
-        if not no_check:
-            failed = check_csl(save_csl)
-            if not failed:
-                print(f"✅ {csl_relative}")
-            else:
-                print(f"💥 {csl_relative}\n    {failed}")
-                success = False
-            if csl_backtrace:
-                # There are many lines above in backtrace mode.
-                # It is helpful to add a blank line after each style.
-                print("")
 
     # Sort and save indices
     index_sorted = sorted(index, key=sort_by_csl_title)

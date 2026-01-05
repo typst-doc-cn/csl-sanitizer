@@ -1,8 +1,56 @@
 version = 1
 revision = 3
 requires-python = ">=3.12"
+resolution-markers = [
+    "sys_platform == 'linux'",
+    "sys_platform == 'win32'",
+    "sys_platform != 'linux' and sys_platform != 'win32'",
+]
 
 [[package]]
 name = "csl-sanitizer"
 version = "0.1.0"
 source = { editable = "." }
+dependencies = [
+    { name = "hayagriva-py", version = "0.1.0", source = { url = "https://github.com/YDX-2147483647/hayagriva-gb-tracking/releases/download/hayagriva-py-main.2025-12-27.a137441/hayagriva_py-0.1.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" }, marker = "sys_platform == 'linux'" },
+    { name = "hayagriva-py", version = "0.1.0", source = { url = "https://github.com/YDX-2147483647/hayagriva-gb-tracking/releases/download/hayagriva-py-main.2025-12-27.a137441/hayagriva_py-0.1.0-cp310-abi3-win_amd64.whl" }, marker = "sys_platform == 'win32'" },
+    { name = "hayagriva-py", version = "0.1.0", source = { url = "https://github.com/YDX-2147483647/hayagriva-gb-tracking/releases/download/hayagriva-py-main.2025-12-27.a137441/hayagriva_py-0.1.0.tar.gz" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "hayagriva-py", marker = "sys_platform != 'linux' and sys_platform != 'win32'", url = "https://github.com/YDX-2147483647/hayagriva-gb-tracking/releases/download/hayagriva-py-main.2025-12-27.a137441/hayagriva_py-0.1.0.tar.gz" },
+    { name = "hayagriva-py", marker = "sys_platform == 'linux'", url = "https://github.com/YDX-2147483647/hayagriva-gb-tracking/releases/download/hayagriva-py-main.2025-12-27.a137441/hayagriva_py-0.1.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" },
+    { name = "hayagriva-py", marker = "sys_platform == 'win32'", url = "https://github.com/YDX-2147483647/hayagriva-gb-tracking/releases/download/hayagriva-py-main.2025-12-27.a137441/hayagriva_py-0.1.0-cp310-abi3-win_amd64.whl" },
+]
+
+[[package]]
+name = "hayagriva-py"
+version = "0.1.0"
+source = { url = "https://github.com/YDX-2147483647/hayagriva-gb-tracking/releases/download/hayagriva-py-main.2025-12-27.a137441/hayagriva_py-0.1.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" }
+resolution-markers = [
+    "sys_platform == 'linux'",
+]
+wheels = [
+    { url = "https://github.com/YDX-2147483647/hayagriva-gb-tracking/releases/download/hayagriva-py-main.2025-12-27.a137441/hayagriva_py-0.1.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7e37f618bf3e88e95db01b4868e8a8a0f9157cd7dbbf6491f93fe5af378dda0e" },
+]
+
+[[package]]
+name = "hayagriva-py"
+version = "0.1.0"
+source = { url = "https://github.com/YDX-2147483647/hayagriva-gb-tracking/releases/download/hayagriva-py-main.2025-12-27.a137441/hayagriva_py-0.1.0-cp310-abi3-win_amd64.whl" }
+resolution-markers = [
+    "sys_platform == 'win32'",
+]
+wheels = [
+    { url = "https://github.com/YDX-2147483647/hayagriva-gb-tracking/releases/download/hayagriva-py-main.2025-12-27.a137441/hayagriva_py-0.1.0-cp310-abi3-win_amd64.whl", hash = "sha256:573e79610da6fa06d754af7d972bc04171f7593fc17fd479c2f45b9a5046056c" },
+]
+
+[[package]]
+name = "hayagriva-py"
+version = "0.1.0"
+source = { url = "https://github.com/YDX-2147483647/hayagriva-gb-tracking/releases/download/hayagriva-py-main.2025-12-27.a137441/hayagriva_py-0.1.0.tar.gz" }
+resolution-markers = [
+    "sys_platform != 'linux' and sys_platform != 'win32'",
+]
+sdist = { hash = "sha256:20173a2d93bbbe06194f597244417609ec9b9aa9063e3a4e4541b515372b33f2" }
