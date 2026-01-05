@@ -15,27 +15,21 @@ jobs:
         with:
           submodules: recursive
       - uses: pandoc/actions/setup@v1
-      - name: Setup hayagriva
-        shell: bash
-        run: |
-          set -euxo pipefail
-
-          curl -LO https://github.com/typst-community/dev-builds/releases/download/hayagriva-v0.9.1/hayagriva-x86_64-unknown-linux-musl.tar.xz
-          tar -xf hayagriva-x86_64-unknown-linux-musl.tar.xz
-          mkdir -p ~/.local/bin/
-          mv ./hayagriva-x86_64-unknown-linux-musl/hayagriva ~/.local/bin/
       - name: Setup zh_CN.UTF-8 locale
         run: |
           sudo locale-gen zh_CN.UTF-8
           locale --all-locales
+      - uses: astral-sh/setup-uv@v7
+      - run: |
+          uv sync --locked
 
       - name: Run tests
-        shell: bash
         run: |
-          PYTHONPATH="$PYTHONPATH:./src/" python tests/run_tests.py
+          uv run --frozen tests/run_tests.py
 
       - name: Build CSL styles
-        run: python -m src.csl_sanitizer
+        run: |
+          CSL_BACKTRACE=1 uv run --frozen csl-sanitizer
       - uses: actions/upload-artifact@v6
         with:
           path: ./dist/

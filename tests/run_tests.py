@@ -5,10 +5,9 @@ from dataclasses import dataclass
 from difflib import unified_diff
 from pathlib import Path
 from sys import argv
-from tempfile import NamedTemporaryFile
 from typing import Self
 
-from csl_sanitizer.csl import check_csl, read_csl, write_csl
+from csl_sanitizer.csl import check_csl, dump_csl, load_csl
 from csl_sanitizer.normalize import normalize_csl
 from csl_sanitizer.util import get_bool_env, ns
 
@@ -56,60 +55,49 @@ if __name__ == "__main__":
     update_test = get_bool_env("UPDATE_TEST")
     test_specs = parse_args(argv[1:])
 
-    with NamedTemporaryFile(
-        suffix=".test.csl",
-        # Make sure `fp` can be reopened on all platforms, especially Windows.
-        delete=True,
-        delete_on_close=False,
-    ) as fp:
-        fp.close()
-        csl = Path(fp.name)
+    for test_spec in test_specs:
+        if not update_test:
+            print(f"📝 Testing {test_spec.stem}…")
+        else:
+            print(f"📝 Generating a test for {test_spec.stem}…")
+        test = TestCase.load(test_spec, for_update=update_test)
 
-        for test_spec in test_specs:
-            if not update_test:
-                print(f"📝 Testing {test_spec.stem}…")
-            else:
-                print(f"📝 Generating a test for {test_spec.stem}…")
-            test = TestCase.load(test_spec, for_update=update_test)
-            csl.write_text(test.input_csl, encoding="utf-8")
-
-            input_error = check_csl(csl)
-            if not update_test:
-                assert input_error == test.input_error, (
-                    f"Expected error before normalization: {test.input_error}, got: {input_error}"
-                )
-            else:
-                assert input_error is not None, (
-                    "Expected an error before normalization, got none."
-                )
-
-            style = read_csl(csl)
-            normalizations = [*normalize_csl(style)]
-            if not update_test:
-                assert normalizations == test.normalizations, (
-                    f"Expected normalizations: {test.normalizations}, got: {normalizations}"
-                )
-            write_csl(style, csl)
-
-            output_error = check_csl(csl)
-            assert output_error is None, (
-                f"Expected no error after normalization, got: {output_error}"
+        input_error = check_csl(test.input_csl)
+        if not update_test:
+            assert input_error == test.input_error, (
+                f"Expected error before normalization: {test.input_error}, got: {input_error}"
+            )
+        else:
+            assert input_error is not None, (
+                "Expected an error before normalization, got none."
             )
 
-            output_csl = csl.read_text(encoding="utf-8")
-            diff = "\n".join(
-                unified_diff(
-                    test.input_csl.splitlines(),
-                    output_csl.splitlines(),
-                    "Original",
-                    "Sanitized",
-                )
+        style = load_csl(test.input_csl)
+        normalizations = [*normalize_csl(style)]
+        if not update_test:
+            assert normalizations == test.normalizations, (
+                f"Expected normalizations: {test.normalizations}, got: {normalizations}"
             )
-            if not update_test:
-                assert diff == test.diff, f"Expected diff:\n{test.diff}\nGot:\n{diff}"
+        output_csl = dump_csl(style)
 
-            if update_test:
-                print(f"""
+        output_error = check_csl(output_csl)
+        assert output_error is None, (
+            f"Expected no error after normalization, got: {output_error}"
+        )
+
+        diff = "\n".join(
+            unified_diff(
+                test.input_csl.splitlines(),
+                output_csl.splitlines(),
+                "Original",
+                "Sanitized",
+            )
+        )
+        if not update_test:
+            assert diff == test.diff, f"Expected diff:\n{test.diff}\nGot:\n{diff}"
+
+        if update_test:
+            print(f"""
 input_error = {input_error!r}
 
 normalizations = {normalizations!r}
