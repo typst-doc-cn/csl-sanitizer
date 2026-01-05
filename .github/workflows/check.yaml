@@ -25,11 +25,11 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run tests/run_tests.py
+          uv run --frozen tests/run_tests.py
 
       - name: Build CSL styles
         run: |
-          CSL_BACKTRACE=1 uv run csl-sanitizer
+          CSL_BACKTRACE=1 uv run --frozen csl-sanitizer
       - uses: actions/upload-artifact@v6
         with:
           path: ./dist/

@@ -30,7 +30,7 @@ jobs:
 
       - uses: actions/configure-pages@v5
       - name: Build CSL styles
-        run: uv run csl-sanitizer
+        run: uv run --frozen csl-sanitizer
       - run: cp main.user.js ./dist/
       - uses: actions/upload-pages-artifact@v4
         with:
