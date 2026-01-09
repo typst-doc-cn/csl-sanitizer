@@ -4,11 +4,11 @@ The `index` variables have to be sorted before passing to this module.
 """
 
 import json
-from collections import deque
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import run
+from typing import Literal
 
 from .csl import CslInfo
 
@@ -24,84 +24,22 @@ class IndexEntry:
     """Brief descriptions of the changes."""
 
 
-def make_human_index(index: Iterable[IndexEntry], dist_dir: Path, readme: Path) -> str:
-    readme_full = readme.read_text(encoding="utf-8")
-    readme_included = readme_full[
-        slice(
-            readme_full.find("<!-- included by main.py: start -->"),
-            readme_full.find("<!-- included by main.py: end -->"),
-        )
-    ]
-
-    lines = deque(
-        [
-            """---
-title: 可用于 hayagriva 的 CSL 样式
-lang: zh
-header-includes: |
-    <style>
-    a, a:visited {
-        color: rgb(52, 81, 178);
-        text-decoration: none;
-    }
-    a:hover {
-        text-decoration: underline;
-    }
-    code {
-        margin-inline: 0.25em;
-    }
-    p {
-        line-height: 1.5em;
-    }
-    li > p {
-        margin-block: 0.5em;
-    }
-    li {
-        margin-block: 1.5em;
-    }
-    li li {
-        margin-block: 0.5em;
-    }
-
-    /* Special style for the README */
-    ul:first-of-type > li {
-        margin-block: 0.5em;
-    }
-    </style>
----""",
-            "将 [Citation Style Language (CSL)](https://citationstyles.org) 样式处理成 [hayagriva](https://github.com/typst/hayagriva) 可用的文件。",
-            readme_included,
-            "## 为 hayagriva 修改过的[中文 CSL 样式](https://zotero-chinese.com/styles/) {#style-list}",
-        ]
-    )
-
-    for entry in index:
-        lines.extend(
-            [
-                f"- **[{entry.info.title}]({entry.info.id.replace('http://', 'https://')})**",
-                "  【"
-                f"[下载修改版本](./{entry.sanitized.relative_to(dist_dir).as_posix()}) · "
-                f"[查看详细更改](./{entry.diff.relative_to(dist_dir).as_posix()})"
-                "】",
-                "  <details><summary>简要更改内容</summary>\n\n"
-                f"{'\n'.join(f'  - {change}' for change in entry.changes)}\n\n"
-                "  </details>"
-                if entry.changes
-                else "  （无需更改，直接可用）",
-            ]
-        )
-
+def make_human_index(*, root: Path, json_index: Path, lang: Literal["zh", "en"]) -> str:
     return run(
         [
-            "pandoc",
-            "--from=gfm+attributes",
-            "--to=html",
-            "--standalone",
+            "typst",
+            "compile",
+            Path(__file__).with_suffix(".typ"),
+            "-",
+            "--format=html",
+            "--features=html",
+            *("--root", root),
+            *("--input", f"json-index=/{json_index.relative_to(root).as_posix()}"),
+            *("--input", f"lang={lang}"),
         ],
         text=True,
         capture_output=True,
         check=True,
-        input="\n\n".join(lines),
     ).stdout
 
 

@@ -11,6 +11,7 @@ from .util import Message, ns
 class Kind(StrEnum):
     """Kinds of normalization."""
 
+    # The following should be synced with indexing.css
     Follow_CSL_spec = "[Follow CSL spec]"
     Discard_CSL_M = "[Discard CSL-M extension]"
     Fix_CSL_M_deprecated = "[Fix CSL-M deprecated extension]"

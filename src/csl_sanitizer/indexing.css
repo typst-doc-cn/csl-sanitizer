@@ -1,0 +1,129 @@
+body {
+  background-color: white;
+  color: black;
+
+  max-width: 36em;
+  margin: 0 auto;
+  padding-inline: 1em;
+
+  font-family: system-ui;
+  text-autospace: normal;
+}
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #282828;
+    color: #e0e0e0;
+  }
+}
+
+main {
+  padding-block: 2em 4em;
+}
+
+h1 {
+  margin-block: 2em;
+  text-align: center;
+
+  small {
+    font-weight: normal;
+  }
+}
+h2 {
+  margin-top: 1.5em;
+}
+
+blockquote {
+  margin: 1em 0 1em 1.7em;
+  padding-left: 1em;
+  border-left: 2px solid #e6e6e6;
+  color: #606060;
+}
+@media (prefers-color-scheme: dark) {
+  blockquote {
+    border-left-color: #505050;
+    color: #a0a0a0;
+  }
+}
+
+a, a:visited {
+  color: rgb(52, 81, 178);
+  text-decoration: none;
+  text-underline-offset: 0.2em;
+}
+@media (prefers-color-scheme: dark) {
+  a, a:visited {
+    color: #9fc1f9;
+  }
+}
+a:hover {
+  text-decoration: underline;
+}
+code {
+  margin-inline: 0.25em;
+}
+p {
+  line-height: 1.5em;
+}
+li > p {
+  margin-block: 0.5em;
+}
+li {
+  margin-block: 1.5em;
+}
+li li {
+  margin-block: 0.5em;
+}
+ul {
+  padding-inline-start: 2em;
+}
+
+/* Special style for the README */
+#prelude {
+  p {
+    line-height: 1.8em;
+  }
+  li {
+    margin-block: 0.5em;
+  }
+}
+
+/* The following should be synced with normalize.py */
+span[data-normalize-kind] {
+  text-decoration: underline;
+  text-decoration-thickness: 0.3em;
+  text-decoration-skip-ink: none;
+  text-decoration-color: transparent;
+}
+span[data-normalize-kind="Follow CSL spec"] {
+  text-decoration-color: #00ff0080;
+}
+span[data-normalize-kind="Discard CSL-M extension"] {
+  text-decoration-color: #ff000080;
+}
+@media (prefers-color-scheme: dark) {
+  span[data-normalize-kind="Discard CSL-M extension"] {
+    text-decoration-color: #ff5151c4;
+  }
+}
+span[data-normalize-kind="Fix CSL-M deprecated extension"] {
+  text-decoration-color: #ffc0cb80;
+}
+span[data-normalize-kind="Discard citeproc-js extension"] {
+  text-decoration-color: #fdbf0680;
+}
+@media (prefers-color-scheme: dark) {
+  span[data-normalize-kind="Discard citeproc-js extension"] {
+    text-decoration-color: #fdbf0699;
+  }
+}
+span[data-normalize-kind="Discard zotero-chinese convention"] {
+  text-decoration-color: #dfdf0b80;
+}
+@media (prefers-color-scheme: dark) {
+  span[data-normalize-kind="Discard zotero-chinese convention"] {
+    text-decoration-color: #ffff0080;
+  }
+}
+span[data-normalize-kind="Discard unknown extension"] {
+  text-decoration-color: #80808080;
+}

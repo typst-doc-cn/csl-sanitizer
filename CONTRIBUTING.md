@@ -1,6 +1,6 @@
 # Contributing guide
 
-First, install [hayagriva](https://github.com/typst/hayagriva) ([dev version](https://github.com/typst-community/dev-builds/)) and [pandoc](https://pandoc.org).
+First, install [uv](https://docs.astral.sh/uv/#installation) and [typst](https://typst.app/open-source/#download).
 
 ```shell
 git submodule update --init --recursive

@@ -153,12 +153,17 @@ def main() -> None:
 
     # Sort and save indices
     index_sorted = sorted(index, key=sort_by_csl_title)
+
+    json_index = dist_dir / "index.json"
+    json_index.write_text(make_json_index(index_sorted, dist_dir), encoding="utf-8")
+
     (dist_dir / "index.html").write_text(
-        make_human_index(index_sorted, dist_dir, ROOT_DIR / "README.md"),
+        make_human_index(lang="zh", root=ROOT_DIR, json_index=json_index),
         encoding="utf-8",
     )
-    (dist_dir / "index.json").write_text(
-        make_json_index(index_sorted, dist_dir), encoding="utf-8"
+    (dist_dir / "index.en.html").write_text(
+        make_human_index(lang="en", root=ROOT_DIR, json_index=json_index),
+        encoding="utf-8",
     )
 
     if not success:
