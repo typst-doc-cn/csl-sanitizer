@@ -7,8 +7,8 @@ from locale import LC_COLLATE, setlocale, strxfrm
 from pathlib import Path
 from sys import argv
 
-from .csl import check_csl, read_csl, write_csl
-from .indexing import CslInfo, IndexEntry, make_human_index, make_json_index
+from .csl import CslInfo, check_csl, read_csl, write_csl
+from .indexing import IndexEntry, make_human_index, make_json_index
 from .normalize import normalize_csl
 from .util import Message, get_bool_env, ns
 
@@ -145,7 +145,7 @@ def main() -> None:
             IndexEntry(
                 info=CslInfo.from_style(style),
                 changes=changes,
-                original=csl,
+                original=csl_relative,
                 sanitized=save_csl,
                 diff=save_dir / "diff.html",
             )

@@ -1,4 +1,5 @@
 #import "@preview/cmarker:0.1.8": render
+#import "@preview/lure:0.2.0": with-query-pairs
 
 #let json-index = sys.inputs.at("json-index", default: "/dist/index.json")
 #let lang = sys.inputs.at("lang", default: "zh")
@@ -92,6 +93,12 @@
       link(entry.sanitized_url, babel(zh: [下载修改版本], en: [Download]))
       [ · ]
       [#link(entry.diff_url, babel(zh: [查看详细更改], en: [Compare]))<new-tab>]
+      [ · ]
+      let validator_url = with-query-pairs("https://validator.citationstyles.org", (
+        version: "1.0.2",
+        url: entry.original_url,
+      ))
+      [#link(validator_url, babel(zh: [检查原版问题], en: [Validate]))<new-tab>]
       [】]
     }
 
