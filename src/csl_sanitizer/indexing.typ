@@ -96,8 +96,11 @@
       [ · ]
       let validator_url = with-query-pairs("https://validator.w3.org/nu/", (
         // API reference: https://github.com/validator/validator/wiki/Service-%C2%BB-Common-params
-        // The schema URL is copied from the official CSL validator: https://github.com/citation-style-language/csl-validator/blob/9284967998/libraries/csl-validator.js#L113
-        schema: "https://raw.githubusercontent.com/citation-style-language/schema/v1.0.2/schemas/styles/csl.rnc",
+        // The schema URL is copied from the official CSL validator: https://github.com/citation-style-language/csl-validator/blob/9284967998/libraries/csl-validator.js#L107-L118
+        schema: (
+          "https://raw.githubusercontent.com/citation-style-language/schema/v1.0.2/schemas/styles/csl.rnc",
+          "https://raw.githubusercontent.com/citation-style-language/schema/602ad40976b7b455a3ce0b79f5534e8e75f088e9/csl.sch",
+        ).join(" "),
         doc: entry.original_url,
         parser: "xml",
         laxtype: "yes",
