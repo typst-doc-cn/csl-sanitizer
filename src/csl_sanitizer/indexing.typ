@@ -94,9 +94,15 @@
       [ · ]
       [#link(entry.diff_url, babel(zh: [查看详细更改], en: [Compare]))<new-tab>]
       [ · ]
-      let validator_url = with-query-pairs("https://validator.citationstyles.org", (
-        version: "1.0.2",
-        url: entry.original_url,
+      let validator_url = with-query-pairs("https://validator.w3.org/nu/", (
+        // API reference: https://github.com/validator/validator/wiki/Service-%C2%BB-Common-params
+        // The schema URL is copied from the official CSL validator: https://github.com/citation-style-language/csl-validator/blob/9284967998/libraries/csl-validator.js#L113
+        schema: "https://raw.githubusercontent.com/citation-style-language/schema/v1.0.2/schemas/styles/csl.rnc",
+        doc: entry.original_url,
+        parser: "xml",
+        laxtype: "yes",
+        level: "error",
+        showsource: "yes",
       ))
       [#link(validator_url, babel(zh: [检查原版问题], en: [Validate]))<new-tab>]
       [】]
