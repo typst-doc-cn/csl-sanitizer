@@ -177,19 +177,20 @@ def remove_nonstandard_variables(
     """Remove non-standard variables like `nationality`.
 
     They are zotero-chinese conventions.
-    - `nationality`
-      https://github.com/zotero-chinese/csl-m-schema-rng/blob/31461c910231fc0749044bae9780e5a69f734558/patches/csl-schema.patch#L52
+    - `dynasty` and `nationality`
+      https://github.com/zotero-chinese/csl-m-schema-rng/blob/31461c910231fc0749044bae9780e5a69f734558/patches/csl-schema.patch#L50-L52
     - `CSTR`
       https://github.com/zotero-chinese/csl-m-schema-rng/blob/4e791b375fd39bc5fea42b0e108c4458c53642d3/patches/csl-schema.patch#L50
       [GB/T 32843—2016《科技资源标识》](https://std.samr.gov.cn/gb/search/gbDetailed?id=71F772D81092D3A7E05397BE0A0AB82A)
     """
     for macro in style.findall("cs:macro", ns):
-        for parent in macro.findall(".//*[@variable='nationality']/..", ns):
-            text = parent.find("./*[@variable='nationality']", ns)
-            assert text is not None
+        for var in ["dynasty", "nationality"]:
+            for parent in macro.findall(f".//*[@variable='{var}']/..", ns):
+                text = parent.find(f"./*[@variable='{var}']", ns)
+                assert text is not None
 
-            parent.remove(text)
-            yield f"Removed a reference to the variable `nationality` in a macro ({macro.get('name')}). {Kind.Discard_zotero_chinese}"
+                parent.remove(text)
+                yield f"Removed a reference to the variable `{var}` in a macro ({macro.get('name')}). {Kind.Discard_zotero_chinese}"
 
         for branch in macro.findall(".//cs:else-if[@variable='CSTR DOI URL']", ns):
             branch.set("variable", "DOI URL")

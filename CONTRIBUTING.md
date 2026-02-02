@@ -22,7 +22,7 @@ python -m http.server -d dist
 > By setting `UV_FROZEN=1` (or running `uv run --frozen`), we skip this time-consuming yet unnecessary check.
 
 ```shell
-$ DEBUG=1 uv run csl-sanitizer styles/chinese/src/GB-T-7714—2025（顺序编码，双语）/GB-T-7714—2025（顺序编码，双语）.csl
+$ DEBUG=3 uv run csl-sanitizer styles/chinese/src/GB-T-7714—2025（顺序编码，双语）/GB-T-7714—2025（顺序编码，双语）.csl
 Removed the term citation-range-delimiter (-). [Discard citeproc-js extension]
 Removed a reference to the variable `CSTR` in a macro (entry-type-id). [Discard zotero-chinese convention]
 Removed a reference to the variable `CSTR` in a macro (publisher). [Discard zotero-chinese convention]
@@ -32,4 +32,4 @@ Removed the localized (en) layout for bibliography. [Discard CSL-M extension]
 ✅ chinese/src/GB-T-7714—2025（顺序编码，双语）/GB-T-7714—2025（顺序编码，双语）.csl
 ```
 
-You can also set `CSL_BACKTRACE=1` to check the style after each edit, or set `NO_CHECK=1` to skip all checks.
+You can also set `DEBUG=4` to check the style after each edit, or set `DEBUG=0` to skip all checks. See [`DebugLevel` in `main.py`](./src/csl_sanitizer/main.py) for details.

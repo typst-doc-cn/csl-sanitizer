@@ -29,9 +29,15 @@ jobs:
         run: |
           uv run --frozen tests/run_tests.py
 
-      - name: Build CSL styles
+      - name: Build CSL styles (minimal result)
+        shell: bash
         run: |
-          CSL_BACKTRACE=1 uv run --frozen csl-sanitizer
+          set -euxo pipefail
+          DEBUG=1 uv run --frozen csl-sanitizer | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Build CSL styles (backtrace)
+        if: ${{ failure() }}
+        run: |
+          DEBUG=4 uv run --frozen csl-sanitizer
       - uses: actions/upload-artifact@v6
         with:
           path: ./dist/
