@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name        可用于 hayagriva 的中文 CSL 样式
+// @name        可用于 Hayagriva 的中文 CSL 样式
 // @namespace   Violentmonkey Scripts
-// @version     0.1.2
-// @description 向 Zotero 中文社区 CSL 样式页面添加可用于 hayagriva 的 CSL 文件。
+// @version     0.1.3
+// @description 向 Zotero 中文社区 CSL 样式页面添加可用于 Hayagriva 的 CSL 文件。
 // @author      Y.D.X.
 // @match       https://zotero-chinese.com/styles/*
 // @grant       none
@@ -19,15 +19,31 @@
   /** @type {Record<string, { title: string, updated: string, sanitized_url: string, diff_url: string, changes: string[] }>} */
   const index = await fetch(with_base("./index.json")).then((r) => r.json());
 
-  function annotate_info() {
-    if (
-      !window.location.pathname.match(/\/styles\/.+\//) ||
-      document.querySelector("h3#hayagriva-version") !== null
-    ) {
-      // If not a style page or already annotated, skip.
-      return;
-    }
+  function add_validator_link() {
+    /** @type {Element} */
+    const ul = document.querySelector("h3#download + p + ul + ul");
 
+    /** @type {HTMLAnchorElement} */
+    const github_link = ul.querySelector(":scope > li:first-child > a");
+    const github_raw_url = github_link.href.replace("/blob/", "/raw/");
+
+    const validator_url = new URL(
+      "https://typst-doc-cn.github.io/csl-validator/",
+    );
+    validator_url.searchParams.set("version", "zotero-chinese:main");
+    validator_url.searchParams.set("url", github_raw_url);
+
+    const validator_link = document.createElement("a");
+    validator_link.href = validator_url.href;
+    validator_link.textContent = "在 CSL Validator (fork) 上检查源码";
+    validator_link.target = "_blank";
+
+    const validator_el = document.createElement("li");
+    validator_el.appendChild(validator_link);
+    ul.appendChild(validator_el);
+  }
+
+  function add_hayagriva_version() {
     const csl_id = document.querySelector(
       ".el-descriptions__table > tbody > tr:nth-child(1) > td:nth-child(2)",
     ).textContent;
@@ -39,7 +55,7 @@
     /** @type {Element[]} */
     const elements = [document.createElement("h3")];
     elements[0].id = "hayagriva-version";
-    elements[0].textContent = "可用于 typst/hayagriva 的版本";
+    elements[0].textContent = "可用于 Typst/Hayagriva 的版本";
 
     if (entry) {
       const p = document.createElement("p");
@@ -83,6 +99,19 @@
         el,
       );
     }
+  }
+
+  function annotate_info() {
+    if (
+      !window.location.pathname.match(/\/styles\/.+\//) ||
+      document.querySelector("h3#hayagriva-version") !== null
+    ) {
+      // If not a style page or already annotated, skip.
+      return;
+    }
+
+    add_validator_link();
+    add_hayagriva_version();
   }
 
   function watch_page_change(fn) {
