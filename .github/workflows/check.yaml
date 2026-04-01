@@ -38,6 +38,6 @@ jobs:
         if: ${{ failure() }}
         run: |
           DEBUG=4 uv run --frozen csl-sanitizer
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           path: ./dist/
