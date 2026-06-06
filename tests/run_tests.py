@@ -1,3 +1,4 @@
+import re
 import tomllib
 import xml.etree.ElementTree as ET
 from collections.abc import Generator
@@ -43,6 +44,26 @@ class TestCase:
             )
 
 
+ERROR_PATTERN = re.compile(
+    r'^(?P<prefix>CSL file malformed:) XmlDeError { source: (?P<source>Custom\(".+"\)), path: Some\(Path { .+ }\) }$'
+)
+assert ERROR_PATTERN.match(
+    "CSL file malformed: XmlDeError { "
+    'source: Custom("missing field `$value`"), '
+    "path: Some(Path { "
+    'segments: [Map { key: "macro" }, Seq { index: 0 }, Map { key: "$value" }, Seq { index: 0 }, Enum { variant: "choose" }, Map { key: "else" }] '
+    "}) }"
+)
+
+
+def is_same_error(actual: str | None, expected: str) -> bool:
+    """Determine if the full actual error is essentially the same as the short expected error."""
+    return (
+        actual is not None
+        and ERROR_PATTERN.sub(r"\g<prefix> \g<source>", actual) == expected
+    )
+
+
 def parse_args(args: list[str]) -> Generator[Path]:
     """Determine cases to be tested."""
     if "all" in args or not args:
@@ -64,7 +85,7 @@ if __name__ == "__main__":
 
         input_error = check_csl(test.input_csl)
         if not update_test:
-            assert input_error == test.input_error, (
+            assert is_same_error(input_error, test.input_error), (
                 f"Expected error before normalization: {test.input_error}, got: {input_error}"
             )
         else:

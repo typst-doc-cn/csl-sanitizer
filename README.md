@@ -15,7 +15,7 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 - 替换非标准语法为等价或近似内容
 - 尽量避免多余更改以保持清晰易懂
 
-针对的 Hayagriva 版本：[2025-12-27 `a137441`](https://github.com/typst/hayagriva/tree/a137441)，预计对应 Typst v0.15.0。
+针对的 Hayagriva 版本：[2026-06-05 `v0.10.0`](https://github.com/typst/hayagriva/releases/tag/v0.10.0)，预计对应 Typst v0.15.0。
 
 使用方法：[查看 CSL 文件列表](https://typst-doc-cn.github.io/csl-sanitizer/#style-list)，或[安装浏览器用户脚本](https://typst-doc-cn.github.io/csl-sanitizer/main.user.js)在 [Zotero 中文社区 CSL 样式页面](https://zotero-chinese.com/styles/)搜索查看。
 
