@@ -15,7 +15,7 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 - Replace non-standard syntaxes with equivalent or approximate ones
 - Keep the change minimal and understandable
 
-The targeted Hayagriva version: [2025-12-27 `a137441`](https://github.com/typst/hayagriva/tree/a137441), expected to be shipped with Typst v0.15.0.
+The targeted Hayagriva version: [2026-06-05 `v0.10.0`](https://github.com/typst/hayagriva/releases/tag/v0.10.0), expected to be shipped with Typst v0.15.0.
 
 Usage: [Go to the CSL file list](https://typst-doc-cn.github.io/csl-sanitizer/#style-list), or [install the browser user script](https://typst-doc-cn.github.io/csl-sanitizer/main.user.js) and view at [Zotero Chinese community’s CSL styles page](https://zotero-chinese.com/styles/).
 
