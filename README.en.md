@@ -15,7 +15,7 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 - Replace non-standard syntaxes with equivalent or approximate ones
 - Keep the change minimal and understandable
 
-The targeted Hayagriva version: [2026-06-05 `v0.10.0`](https://github.com/typst/hayagriva/releases/tag/v0.10.0), expected to be shipped with Typst v0.15.0.
+The targeted Hayagriva version: [2026-06-05 `v0.10.0`](https://github.com/typst/hayagriva/releases/tag/v0.10.0), shipped with Typst v0.15.0-rc.1.
 
 Usage: [Go to the CSL file list](https://typst-doc-cn.github.io/csl-sanitizer/#style-list), or [install the browser user script](https://typst-doc-cn.github.io/csl-sanitizer/main.user.js) and view at [Zotero Chinese community’s CSL styles page](https://zotero-chinese.com/styles/).
 
@@ -24,8 +24,8 @@ Usage: [Go to the CSL file list](https://typst-doc-cn.github.io/csl-sanitizer/#s
 Due to the diversity of implementations, **many CSL files go beyond the [CSL specification](https://docs.citationstyles.org/en/stable/specification.html)**, and some even go beyond the [CSL-M extension](https://citeproc-js.readthedocs.io/en/latest/csl-m/) (because [Zotero allows arbitrary extra CSL variables](https://github.com/zotero-chinese/styles/discussions/598#discussioncomment-15125308)).
 Among 300+ [Chinese CSL styles](https://zotero-chinese.com/styles/), about 74% are considered _malformed_ by Hayagriva (the engine behind [Typst](https://typst.app/home)), but all of them are accepted by [citeproc-js](https://citeproc-js.readthedocs.io/en/latest/) (the engine behind [Zotero](https://www.zotero.org/)).
 
-Unfortunately, **[Hayagriva hardly provides clear error messages](https://github.com/typst/hayagriva/issues/405)**, making it very difficult to debug.
-It's likely that you will have to comment out `<macro>`s and recompile bisectionally in order to locate the problem, even if you [understand what Hayagriva is complaining about](https://typst-doc-cn.github.io/guide/FAQ/bib-csl.html).
+However, **[error messages provided by Hayagriva are not very clear](https://github.com/typst/hayagriva/issues/405)**, making it difficult to debug.
+Even if you [understand what Hayagriva is complaining about](https://typst-doc-cn.github.io/guide/FAQ/bib-csl.html), you may still have to correct errors one by one and keep recompiling to finally fix a CSL style.
 
 > - Failed to load CSL style (duplicate field `layout`)
 > - Failed to load CSL style (data did not match any variant of untagged enum Term)
