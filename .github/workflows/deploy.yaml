@@ -34,7 +34,7 @@ jobs:
       - name: Build CSL styles
         run: uv run --frozen csl-sanitizer
       - run: cp main.user.js ./dist/
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: ./dist/
 
