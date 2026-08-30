@@ -192,6 +192,13 @@ def remove_nonstandard_variables(
                 parent.remove(text)
                 yield f"Removed a reference to the variable `{var}` in a macro ({macro.get('name')}). {Kind.Discard_zotero_chinese}"
 
+        for choose in macro.findall(".//cs:else-if[@variable='CSTR']/..", ns):
+            branch = choose.find("./*[@variable='CSTR']", ns)
+            assert branch is not None
+
+            choose.remove(branch)
+            yield f"Removed a reference to the variable `CSTR` in a macro ({macro.get('name')}). {Kind.Discard_zotero_chinese}"
+
         for branch in macro.findall(".//cs:else-if[@variable='CSTR DOI URL']", ns):
             branch.set("variable", "DOI URL")
             yield f"Removed a reference to the variable `CSTR` in a macro ({macro.get('name')}). {Kind.Discard_zotero_chinese}"
