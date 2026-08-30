@@ -3,9 +3,12 @@ input_error = 'CSL file malformed: Custom("data did not match any variant of unt
 normalizations = [
   'Removed a reference to the variable `CSTR` in a macro (entry-type-id). [Discard zotero-chinese convention]',
   'Removed a reference to the variable `CSTR` and its wrapping tags in a macro (access). [Discard zotero-chinese convention]',
+  'Removed a reference to the variable `CSTR` in a macro (access-url). [Discard zotero-chinese convention]',
 ]
 
-# Adapted from https://github.com/zotero-chinese/styles/blob/0e0ad91/src/GB-T-7714—2025（顺序编码，双语）/GB-T-7714—2025（顺序编码，双语）.csl
+# Adapted from:
+# - https://github.com/zotero-chinese/styles/blob/0e0ad91/src/GB-T-7714—2025（顺序编码，双语）/GB-T-7714—2025（顺序编码，双语）.csl
+# - https://github.com/zotero-chinese/styles/blob/cf56b11/src/GB-T-7714—2025（注释，双语，无URL，无DOI，重复引用不省略）/GB-T-7714—2025（注释，双语，无URL，无DOI，重复引用不省略）.csl
 input_csl = '''
 <?xml version='1.0' encoding='utf-8'?>
 <style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
@@ -42,6 +45,19 @@ input_csl = '''
       </choose>
     </group>
   </macro>
+  <macro name="access-url">
+    <choose>
+      <if variable="URL">
+        <text variable="URL"/>
+      </if>
+      <else-if variable="CSTR">
+        <text variable="CSTR" prefix="https://cstr.cn/"/>
+      </else-if>
+      <else>
+        <text variable="DOI" prefix="https://doi.org/"/>
+      </else>
+    </choose>
+  </macro>
   <citation>
     <layout>
       <text value="irrelevant"/>
@@ -69,7 +85,7 @@ diff = '''
          <text value="EB"/>
        </else-if>
        <else>
-@@ -23,15 +23,8 @@
+@@ -23,24 +23,14 @@
 
    <macro name="access">
      <group delimiter=". ">
@@ -86,5 +102,14 @@ diff = '''
 +      <text variable="DOI" prefix="DOI:"/>
 +        </group>
    </macro>
-   <citation>
-     <layout>'''
+   <macro name="access-url">
+     <choose>
+       <if variable="URL">
+         <text variable="URL"/>
+       </if>
+-      <else-if variable="CSTR">
+-        <text variable="CSTR" prefix="https://cstr.cn/"/>
+-      </else-if>
+       <else>
+         <text variable="DOI" prefix="https://doi.org/"/>
+       </else>'''
