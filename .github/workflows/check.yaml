@@ -8,7 +8,7 @@ on:
   merge_group:
 
 jobs:
-  check:
+  check-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -33,11 +33,55 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          DEBUG=1 uv run --frozen csl-sanitizer | tee -a "$GITHUB_STEP_SUMMARY"
+          DEBUG=1 uv run --frozen csl-sanitizer-build | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Build CSL styles (backtrace)
         if: ${{ failure() }}
         run: |
-          DEBUG=4 uv run --frozen csl-sanitizer
+          DEBUG=4 uv run --frozen csl-sanitizer-build
       - uses: actions/upload-artifact@v7
         with:
           path: ./dist/
+
+  check-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - run: uv tool install .[cli]
+      - name: Download a.csl
+        run: |
+          curl -o a.csl -L https://github.com/zotero-chinese/styles/raw/cf56b11/src/GB-T-7714—2025（顺序编码，双语）/GB-T-7714—2025（顺序编码，双语）.csl
+      - name: Test CLI
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          csl-sanitizer a.csl
+          wc -l a.sanitized.csl
+          csl-sanitizer a.sanitized.csl
+          rm a.sanitized.csl a.sanitized.sanitized.csl
+
+          cat a.csl | csl-sanitizer - - | wc -l
+
+          cat a.csl | csl-sanitizer - b.csl
+          rm b.csl
+
+          csl-sanitizer a.csl - | wc -l
+
+          csl-sanitizer a.csl b.csl
+          rm b.csl
+
+          old_hash=$(sha256sum a.csl)
+          csl-sanitizer a.csl a.csl
+          new_hash=$(sha256sum a.csl)
+          if [ "$old_hash" == "$new_hash" ]; then
+            echo "Error: a.csl should be updated after sanitization"
+            exit 1
+          fi
+
+          csl-sanitizer a.csl a.csl
+          newer_hash=$(sha256sum a.csl)
+          if [ "$new_hash" != "$newer_hash" ]; then
+            echo "Error: a.csl should not change after the second sanitization"
+            exit 1
+          fi

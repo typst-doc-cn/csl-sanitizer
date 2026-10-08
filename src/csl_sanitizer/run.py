@@ -6,7 +6,7 @@ from difflib import HtmlDiff
 from enum import IntEnum
 from locale import LC_COLLATE, setlocale, strxfrm
 from pathlib import Path
-from sys import argv
+from sys import argv, exit
 
 from .csl import CslInfo, check_csl, read_csl, write_csl
 from .indexing import IndexEntry, make_human_index, make_json_index
@@ -66,7 +66,11 @@ def sort_by_csl_title(x: IndexEntry) -> tuple[int | str, ...]:
 
 def main() -> None:
     styles_dir = ROOT_DIR / "styles"
-    assert styles_dir.exists()
+    if not styles_dir.exists():
+        print(
+            "This script is not meant to be used as a tool outside the repository. Please use `csl-sanitizer` instead."
+        )
+        exit(1)
 
     dist_dir = ROOT_DIR / "dist"
     dist_dir.mkdir(exist_ok=True)
@@ -85,9 +89,8 @@ def main() -> None:
         # 1. Normalize
         style = read_csl(csl)
 
-        if debug_level >= DebugLevel.BACKTRACE:
-            if failed := check_csl(style):
-                print(f"💥 {failed}")
+        if debug_level >= DebugLevel.BACKTRACE and (failed := check_csl(style)):
+            print(f"💥 {failed}")
 
         changes: deque[Message] = deque()
         for message in normalize_csl(style):
@@ -112,7 +115,7 @@ def main() -> None:
             if debug_level >= DebugLevel.BACKTRACE:
                 # There are many lines above in backtrace mode.
                 # It is helpful to add a blank line after each style.
-                print("")
+                print()
 
         # 3. Save
 

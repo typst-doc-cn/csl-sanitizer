@@ -4,13 +4,20 @@ version = "0.1.0"
 description = "Sanitize Citation Style Language (CSL) files for hayagriva."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["hayagriva-py"]
+dependencies = []
+
+[project.optional-dependencies]
+cli = ["click>=8.5.0"]
+
+[dependency-groups]
+dev = ["hayagriva-py"]
 
 [project.scripts]
-csl-sanitizer = "csl_sanitizer:main.main"
+csl-sanitizer = "csl_sanitizer:cli.cli [cli]"
+csl-sanitizer-build = "csl_sanitizer:run.main" # Only for dev.
 
 [build-system]
-requires = ["uv_build>=0.9.1,<0.10.0"]
+requires = ["uv_build>=0.9.1,<0.13"]
 build-backend = "uv_build"
 
 [tool.ruff]
@@ -18,7 +25,7 @@ build-backend = "uv_build"
 extend-exclude = ["styles/"]
 
 [tool.ruff.lint]
-extend-select = ["U", "TYP", "F", "I"]
+extend-select = ["UP", "TC", "F", "I"]
 
 [tool.uv.sources]
 hayagriva-py = [

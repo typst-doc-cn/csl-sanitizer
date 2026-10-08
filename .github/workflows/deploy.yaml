@@ -32,7 +32,7 @@ jobs:
 
       - uses: actions/configure-pages@v6
       - name: Build CSL styles
-        run: uv run --frozen csl-sanitizer
+        run: uv run --frozen csl-sanitizer-build
       - run: cp main.user.js ./dist/
       - uses: actions/upload-pages-artifact@v5
         with:
