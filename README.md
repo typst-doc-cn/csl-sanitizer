@@ -34,3 +34,16 @@ Sanitize [Citation Style Language (CSL)](https://citationstyles.org) files for [
 不过请注意，这并不保证能完全正确地著录参考文献，具体可参考 [Hayagriva 对 GB/T 7714—2015 的支持情况](https://ydx-2147483647.github.io/hayagriva-gb-tracking/)。总之，[Typst 在中文支持方面还有不小差距，必要时请结合其它方案使用](https://typst-doc-cn.github.io/clreq/#x7-bibliography)。
 
 <!-- included by indexing.typ: end -->
+
+## 处理其它 CSL 样式
+
+本项目会统一处理[`styles/`](./styles/)中 Zotero 中文社区当前版本的 CSL 样式。如欲处理其它 CSL 样式，可安装[^specifier]并调用`csl-sanitizer`命令行工具：
+
+[^specifier]: 此处安装时建议按 [GitHub 源代码 archive URL](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives#source-code-archive-urls) 而非[`git+https` URL](https://packaging.python.org/en/latest/tutorials/installing-packages/#installing-from-vcs)。两种方法都能用，但后者会慢许多，因为 uv 按`git+https` URL 安装时会克隆不需要的 git 子模块`styles/chinese/`（[pip#6374](https://github.com/pypa/pip/issues/6374), [uv#10130](https://github.com/astral-sh/uv/issues/10130)）。
+
+```shell
+uv tool install 'https://github.com/typst-doc-cn/csl-sanitizer/archive/refs/heads/main.zip[cli]'
+csl-sanitizer INPUT.csl OUTPUT.csl
+```
+
+如果您知道其它 CSL 社区样式库也长期有类似需求，欢迎[建立 issue](https://github.com/typst-doc-cn/csl-sanitizer/issues/new)沟通。本项目可一并收入`styles/`统一处理。

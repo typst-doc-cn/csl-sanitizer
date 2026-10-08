@@ -66,7 +66,11 @@ def sort_by_csl_title(x: IndexEntry) -> tuple[int | str, ...]:
 
 def main() -> None:
     styles_dir = ROOT_DIR / "styles"
-    assert styles_dir.exists()
+    if not styles_dir.exists():
+        print(
+            "This script is not meant to be used as a tool outside the repository. Please use `csl-sanitizer` instead."
+        )
+        exit(1)
 
     dist_dir = ROOT_DIR / "dist"
     dist_dir.mkdir(exist_ok=True)

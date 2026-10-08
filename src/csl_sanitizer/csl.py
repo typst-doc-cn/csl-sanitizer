@@ -8,8 +8,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Self
 
-from hayagriva import check_csl as _check_csl
-
 from .util import ns
 
 CslStyle = ET.Element
@@ -57,6 +55,14 @@ def check_csl(style: str | CslStyle) -> str | None:
 
     Returns the error message if considered malformed, and returns `None` otherwise.
     """
+    try:
+        from hayagriva import check_csl as _check_csl
+    except ImportError:
+        raise ImportError(
+            "The dev dependency hayagriva-py is required for checking CSL styles. "
+            "If you see this error when using the CLI, please report an issue."
+        )
+
     if isinstance(style, str):
         csl = style
     else:

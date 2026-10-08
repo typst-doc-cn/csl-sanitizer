@@ -36,3 +36,16 @@ This project attempts to help you with these heavy work, **letting CSL styles be
 However, please note that this does not mean the bibliography format will be strictly correct. Details on that can be found in [Hayagriva’s support for GB/T 7714—2015](https://ydx-2147483647.github.io/hayagriva-gb-tracking/) (not available in English at present). In general, [Typst still has a considerable gap in Chinese support. Please combine this with other workarounds when necessary.](https://typst-doc-cn.github.io/clreq/#x7-bibliography)
 
 <!-- included by indexing.typ: end -->
+
+## Sanitize other CSL styles
+
+This project sanitizes the current versions of the Zotero Chinese community’s CSL styles in [`styles/`](./styles/). To sanitize other CSL styles, install[^specifier] and invoke the `csl-sanitizer` command-line tool:
+
+[^specifier]: In this case, it is recommended to install via [GitHub source code archive URLs](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives#source-code-archive-urls) instead of [`git+https` URLs](https://packaging.python.org/en/latest/tutorials/installing-packages/#installing-from-vcs). Both should work, but the latter is significantly slower, because uv unnecessarily clones the git submodule `styles/chinese/` when using `git+https` URLs ([pip#6374](https://github.com/pypa/pip/issues/6374), [uv#10130](https://github.com/astral-sh/uv/issues/10130)).
+
+```shell
+uv tool install 'https://github.com/typst-doc-cn/csl-sanitizer/archive/refs/heads/main.zip[cli]'
+csl-sanitizer INPUT.csl OUTPUT.csl
+```
+
+If you know of any other community repositories for CSL styles that have similar needs in the long term, please [open an issue](https://github.com/typst-doc-cn/csl-sanitizer/issues/new) to discuss. We can incorporate them into `styles/` and sanitize them in the same way.
