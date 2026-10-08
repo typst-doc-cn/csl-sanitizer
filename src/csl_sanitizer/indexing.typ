@@ -1,4 +1,4 @@
-#import "@preview/cmarker:0.1.8": render
+#import "@preview/cmarker:0.1.10": render
 #import "@preview/lure:0.2.0": with-query-pairs
 
 #let json-index = sys.inputs.at("json-index", default: "/dist/index.json")
