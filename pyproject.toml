@@ -18,7 +18,7 @@ build-backend = "uv_build"
 extend-exclude = ["styles/"]
 
 [tool.ruff.lint]
-extend-select = ["U", "TYP", "F", "I"]
+extend-select = ["UP", "TC", "F", "I"]
 
 [tool.uv.sources]
 hayagriva-py = [
